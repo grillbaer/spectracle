@@ -25,7 +25,7 @@ public class WaveLengthSelector {
     public WaveLengthSelector(String labelText, Color labelColor) {
         this.panel = new JPanel(new FlowLayout());
 
-        this.comboBox = new JComboBox<>();
+        this.comboBox = new JComboBox<>(NamedWaveLength.COMMON_WAVELENGTHS.toArray(new NamedWaveLength[0]));
         this.comboBox.setEditable(true);
         this.comboBox.setRenderer(new NamedWaveLengthRenderer(true));
         this.comboBox.addActionListener(e -> onChange());
