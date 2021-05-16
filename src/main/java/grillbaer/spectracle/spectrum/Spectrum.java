@@ -27,15 +27,23 @@ public final class Spectrum {
         return this.calibration.indexToNanoMeters(this.sampleLine.getLength(), index);
     }
 
+    public double getBeginNanoMeters() {
+        return getNanoMetersAtIndex(0);
+    }
+
+    public double getEndNanoMeters() {
+        return getNanoMetersAtIndex(sampleLine.getLength() - 1);
+    }
+
     public double getMinNanoMeters() {
-        return this.calibration.indexToNanoMeters(this.sampleLine.getLength(), 0);
+        return Math.min(getBeginNanoMeters(), getEndNanoMeters());
     }
 
     public double getMaxNanoMeters() {
-        return this.calibration.indexToNanoMeters(this.sampleLine.getLength(), sampleLine.getLength() - 1);
+        return Math.max(getBeginNanoMeters(), getEndNanoMeters());
     }
 
     public double getNanoMeterRange() {
-        return getMaxNanoMeters() - getMinNanoMeters();
+        return Math.abs(getMaxNanoMeters() - getMinNanoMeters());
     }
 }

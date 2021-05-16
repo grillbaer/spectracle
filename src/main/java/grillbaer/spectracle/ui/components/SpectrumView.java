@@ -159,7 +159,7 @@ public class SpectrumView extends JComponent {
 
     private void drawSpectrumGraph(Graphics2D g2) {
         final int len = this.spectrum.getLength();
-        int lastX = this.graphArea.x;
+        int lastX = (int) waveLengthToX(this.spectrum.getValueAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
             final float value = this.spectrum.getValueAtIndex(i);
@@ -167,7 +167,7 @@ public class SpectrumView extends JComponent {
             final int y = (int) valueToY(value);
             final var color = SpectralColors.getColorForWaveLength((float) nanoMeters);
             g2.setColor(color);
-            g2.fillRect(lastX, y, x - lastX + 1, this.graphArea.y + this.graphArea.height - y);
+            g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX) + 1, this.graphArea.y + this.graphArea.height - y);
             lastX = x;
         }
     }
@@ -182,11 +182,15 @@ public class SpectrumView extends JComponent {
     }
 
     protected double waveLengthToX(double nanoMeters) {
-        return graphArea.x + (nanoMeters - spectrum.getMinNanoMeters()) / spectrum.getNanoMeterRange() * graphArea.width;
+        return graphArea.x + Math.abs(nanoMeters - spectrum.getBeginNanoMeters()) / spectrum.getNanoMeterRange() * graphArea.width;
     }
 
     protected double xToWaveLength(double x) {
-        return (x - graphArea.x) / graphArea.width * spectrum.getNanoMeterRange() + spectrum.getMinNanoMeters();
+        if (spectrum.getBeginNanoMeters() < spectrum.getEndNanoMeters()) {
+            return spectrum.getBeginNanoMeters() + (x - graphArea.x) / graphArea.width * spectrum.getNanoMeterRange();
+        } else {
+            return spectrum.getBeginNanoMeters() - (x - graphArea.x) / graphArea.width * spectrum.getNanoMeterRange();
+        }
     }
 
     protected double valueToY(double value) {
