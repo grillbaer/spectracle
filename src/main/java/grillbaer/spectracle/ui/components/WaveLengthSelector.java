@@ -14,7 +14,6 @@ import java.awt.event.FocusEvent;
 import java.util.regex.Pattern;
 
 public class WaveLengthSelector {
-    public static final String CUSTOM_WAVE_LENGTH_NAME = "custom";
     private final JPanel panel;
     private final JComboBox<NamedWaveLength> comboBox;
     private static final Pattern WAVE_LENGTH_PATTERN = Pattern.compile("\\s*[0-9]+([.,][0-9]*)?\\s*");
@@ -75,7 +74,7 @@ public class WaveLengthSelector {
         if (this.comboBox.getEditor().getItem() instanceof String editText) {
             final var waveLength = textToWaveLength(editText);
             if (waveLength != null)
-                return new NamedWaveLength(CUSTOM_WAVE_LENGTH_NAME, textToWaveLength(editText));
+                return new NamedWaveLength(null, textToWaveLength(editText));
         }
 
         return null;

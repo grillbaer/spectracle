@@ -3,7 +3,6 @@ package grillbaer.spectracle.ui;
 import grillbaer.spectracle.Context;
 import grillbaer.spectracle.spectrum.Calibration;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
-import grillbaer.spectracle.spectrum.WaveLengths;
 import grillbaer.spectracle.ui.components.Buttons;
 import grillbaer.spectracle.ui.components.Cursor;
 import grillbaer.spectracle.ui.components.SpectrumView;
@@ -79,10 +78,10 @@ public class CalibrationPanel {
     }
 
     private static String getCursorLabel(@NonNull WaveLengthSelector waveLengthSelector, @NonNull String waveLengthLabel) {
-        final var nanoMeters = waveLengthSelector.getValidWaveLength();
         final var baseLabel = "Cal. set " + waveLengthLabel;
 
-        return nanoMeters != null ? baseLabel + "=" + WaveLengths.format(nanoMeters.getNanoMeters()) + " here" : baseLabel;
+        final var waveLength = waveLengthSelector.getValidWaveLength();
+        return waveLength != null ? baseLabel + " to " + waveLength.getWaveLengthNameString(false) + " here" : baseLabel;
     }
 
     private void updateEnabled() {
