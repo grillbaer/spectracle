@@ -17,7 +17,7 @@ public final class Buttons {
     }
 
     public static JButton createOkButton() {
-        final var button = createFlatButton("✅", null);
+        final var button = new JButton("✅", null);
         button.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
         button.setForeground(Color.GREEN.darker());
 
@@ -25,7 +25,7 @@ public final class Buttons {
     }
 
     public static JButton createCancelButton() {
-        final var button = createFlatButton("❌", null);
+        final var button = new JButton("❌", null);
         button.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
         button.setForeground(Color.RED.darker());
 

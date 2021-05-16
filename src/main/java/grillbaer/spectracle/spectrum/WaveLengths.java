@@ -8,6 +8,6 @@ public class WaveLengths {
     }
 
     public static String format(double nanoMeters) {
-        return String.format(Locale.ROOT, "%.1f", nanoMeters);
+        return String.format(Locale.ROOT, "%.0f", nanoMeters);
     }
 }

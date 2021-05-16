@@ -16,8 +16,8 @@ public final class Calibration {
 
     public static Calibration createDefault() {
         return new Calibration(
-                new Point(0., 300.),
-                new Point(1., 1000.));
+                new Point(0.1, 300.),
+                new Point(0.9, 1000.));
     }
 
     public static Calibration create(@NonNull Point waveLengthCal0, @NonNull Point waveLengthCal1) {

@@ -29,7 +29,7 @@ public final class Camera implements Closeable {
         setCameraProps(getCameraProps().withFrameWidth(1280).withFrameHeight(720));
     }
 
-    public boolean isOpen() {
+    public synchronized boolean isOpen() {
         return this.videoCapture.isOpened();
     }
 

@@ -1,30 +1,42 @@
 package grillbaer.spectracle.ui.components;
 
+import grillbaer.spectracle.model.Observers;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
+import grillbaer.spectracle.spectrum.WaveLengths;
+import lombok.Getter;
 
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.regex.Pattern;
 
 public class WaveLengthSelector {
+    public static final String CUSTOM_WAVE_LENGTH_NAME = "custom";
     private final JPanel panel;
     private final JComboBox<NamedWaveLength> comboBox;
     private static final Pattern WAVE_LENGTH_PATTERN = Pattern.compile("\\s*[0-9]+([.,][0-9]*)?\\s*");
+
+    @Getter
+    private final Observers<NamedWaveLength> changeObservers = new Observers<>();
 
     public WaveLengthSelector(String labelText, Color labelColor) {
         this.panel = new JPanel(new FlowLayout());
 
         this.comboBox = new JComboBox<>();
         this.comboBox.setEditable(true);
-        this.comboBox.addActionListener(e -> verifyInput());
+        this.comboBox.setRenderer(new NamedWaveLengthRenderer(true));
+        this.comboBox.addActionListener(e -> onChange());
         this.comboBox.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
-                verifyInput();
+                onChange();
             }
         });
+        ((JTextComponent) this.comboBox.getEditor().getEditorComponent()).getDocument()
+                .addUndoableEditListener(es -> onChange());
 
         if (labelText != null) {
             final var label = new JLabel(labelText);
@@ -36,29 +48,59 @@ public class WaveLengthSelector {
         }
 
         this.panel.add(comboBox);
-        this.panel.add(new JLabel("nm"));
+
+        final var unitLabel = new JLabel("nm");
+        this.panel.add(unitLabel);
+
+        updateDisplay();
     }
 
     public JComponent getComponent() {
         return this.panel;
     }
 
-    public NamedWaveLength getValidWaveLength() {
-        final var selected = this.comboBox.getSelectedItem();
-        if (selected instanceof NamedWaveLength namedWaveLength) {
-            return namedWaveLength;
-        } else if (selected instanceof String text) {
-            return new NamedWaveLength("entered", textToWaveLength(text));
-        } else {
-            return null;
-        }
+    public void addActionListener(ActionListener listener) {
+        this.comboBox.addActionListener(listener);
     }
 
-    private void verifyInput() {
-        final boolean valid =
-                this.comboBox.getSelectedItem() instanceof NamedWaveLength
-                        || (this.comboBox.getSelectedItem() instanceof String text && textToWaveLength(text) != null);
-        this.comboBox.setBackground(valid ? null : Color.RED.darker());
+    public void transferFocus() {
+        this.comboBox.getEditor().getEditorComponent().transferFocus();
+    }
+
+    public NamedWaveLength getValidWaveLength() {
+        final var selected = this.comboBox.getSelectedItem();
+        if (selected instanceof NamedWaveLength namedWaveLength)
+            return namedWaveLength;
+
+        if (this.comboBox.getEditor().getItem() instanceof String editText) {
+            final var waveLength = textToWaveLength(editText);
+            if (waveLength != null)
+                return new NamedWaveLength(CUSTOM_WAVE_LENGTH_NAME, textToWaveLength(editText));
+        }
+
+        return null;
+    }
+
+    public void setWaveLength(double nanoMeters) {
+        NamedWaveLength matchingNamedWaveLength = null;
+        for (int i = 0; i < this.comboBox.getItemCount(); i++) {
+            final var candidate = this.comboBox.getItemAt(i);
+            if (candidate.getNanoMeters() == nanoMeters) {
+                matchingNamedWaveLength = candidate;
+            }
+        }
+
+        this.comboBox.setSelectedItem(WaveLengths.format(nanoMeters));
+    }
+
+    private void onChange() {
+        updateDisplay();
+        this.changeObservers.fire(getValidWaveLength());
+    }
+
+    private void updateDisplay() {
+        final var validWaveLength = getValidWaveLength();
+        this.comboBox.setBackground(validWaveLength != null ? null : Color.RED.darker());
     }
 
     private Double textToWaveLength(String text) {
