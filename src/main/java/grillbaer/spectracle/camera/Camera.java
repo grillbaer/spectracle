@@ -18,6 +18,9 @@ public final class Camera implements Closeable {
     private final VideoCapture videoCapture;
     private final Mat frameMat;
 
+    //TODO: double buffer to avoid waiting times between UI and grab calls
+    //TODO: improve conversion to BufferedImage
+
     @Getter
     private Observers<Camera> frameGrabbedObservers = new Observers<>();
 
@@ -75,6 +78,9 @@ public final class Camera implements Closeable {
     }
 
     private static BufferedImage convertMatToImage(Mat mat) {
+        if (mat.rows() == 0 || mat.cols() == 0)
+            return null;
+
         final int type = mat.channels() == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_3BYTE_BGR;
         final var buffer = new byte[mat.width() * mat.channels() * mat.height()];
         mat.get(0, 0, buffer);

@@ -50,16 +50,18 @@ public class CameraView extends JComponent {
         if (camera != null) {
             final var insets = getInsets();
             final var image = camera.getFrameImage();
-            final int availableWidth = getWidth() - insets.left - insets.right;
-            final int availableHeight = getHeight() - insets.top - insets.bottom;
-            final Dimension renderDim = Geometry.scaleToFitWidth(
-                    image.getWidth(), image.getHeight(),
-                    availableWidth, availableHeight);
-            final var imageY0 = insets.top + (availableHeight - renderDim.height) / 2;
-            final var imageX0 = insets.left + (availableWidth - renderDim.width) / 2;
-            g.drawImage(image, imageX0, imageY0,
-                    renderDim.width, renderDim.height, null);
-            drawSampleRow((Graphics2D) g, imageX0, imageY0, renderDim.width, renderDim.height);
+            if (image != null) {
+                final int availableWidth = getWidth() - insets.left - insets.right;
+                final int availableHeight = getHeight() - insets.top - insets.bottom;
+                final Dimension renderDim = Geometry.scaleToFitWidth(
+                        image.getWidth(), image.getHeight(),
+                        availableWidth, availableHeight);
+                final var imageY0 = insets.top + (availableHeight - renderDim.height) / 2;
+                final var imageX0 = insets.left + (availableWidth - renderDim.width) / 2;
+                g.drawImage(image, imageX0, imageY0,
+                        renderDim.width, renderDim.height, null);
+                drawSampleRow((Graphics2D) g, imageX0, imageY0, renderDim.width, renderDim.height);
+            }
         }
     }
 

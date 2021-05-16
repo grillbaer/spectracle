@@ -159,7 +159,7 @@ public class SpectrumView extends JComponent {
 
     private void drawSpectrumGraph(Graphics2D g2) {
         final int len = this.spectrum.getLength();
-        int lastX = (int) waveLengthToX(this.spectrum.getValueAtIndex(0));
+        int lastX = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
             final float value = this.spectrum.getValueAtIndex(i);
@@ -241,6 +241,7 @@ public class SpectrumView extends JComponent {
             if (this.draggingXCursor != null) {
                 this.draggingXCursor.setDragging(false);
                 this.draggingXCursor = null;
+                repaint();
             }
         }
 
@@ -252,6 +253,7 @@ public class SpectrumView extends JComponent {
             updateGraphArea();
             if (this.draggingXCursor != null) {
                 this.draggingXCursor.setValue(xToWaveLength(e.getX()));
+                repaint();
             }
         }
     }
