@@ -10,6 +10,7 @@ import lombok.NonNull;
 
 import javax.swing.*;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Model containing a camera, the spectra obtained from it, properties and user interface states.
@@ -24,8 +25,10 @@ public final class Model {
     private final Observers<Boolean> cameraPausedObservers = new Observers<>();
     private final Observers<Camera> frameGrabbedObservers = new Observers<>();
     private final Observer<Camera> frameGrabbedHandler = camera -> {
-        frameGrabbedObservers.fire(camera);
-        triggerNextFrameIfNotPaused();
+        SwingUtilities.invokeLater(() -> {
+            frameGrabbedObservers.fire(camera);
+            triggerNextFrameIfNotPaused();
+        });
     };
 
     private @NonNull Calibration calibration = Calibration.createDefault();
@@ -83,7 +86,7 @@ public final class Model {
 
     private void triggerNextFrame() {
         if (this.camera != null) {
-            SwingUtilities.invokeLater(() -> this.camera.grabNextFrame());
+            CompletableFuture.runAsync(() -> this.camera.grabNextFrame());
         }
     }
 
