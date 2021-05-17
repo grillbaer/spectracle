@@ -24,6 +24,8 @@ public class CameraPanel {
         this.cameraView = new CameraView();
         this.cameraView.setSampleRowPosRatio(this.context.getModel().getSampleRowPosRatio());
         this.cameraView.setSampleRows(this.context.getModel().getSampleRows());
+        this.cameraView.setFrame(this.context.getModel().getCurrentFrame());
+        this.context.getModel().getFrameGrabbedObservers().add(this.cameraView::setFrame);
 
         this.exposureSlider = new JSlider(SwingConstants.HORIZONTAL, -15, 10, 0);
         this.exposureSlider.addChangeListener(e -> panelToCameraProps());
@@ -66,7 +68,6 @@ public class CameraPanel {
     private void cameraToPanel(Camera camera) {
         final var camText = camera != null ? "⭮ Cam " + camera.getId() : "⭮ No Cam";
         this.cycleCameraButton.setText(camText);
-        this.cameraView.setCamera(camera);
         this.cameraPropsToPanel(camera != null ? camera.getCameraProps() : null);
     }
 
@@ -86,7 +87,7 @@ public class CameraPanel {
     }
 
     private void cycleToNextCamera() {
-        final var lastCam = this.cameraView.getCamera();
+        final var lastCam = this.context.getModel().getCamera();
         var nextCam = new Camera(lastCam.isOpen() ? lastCam.getId() + 1 : 0);
         if (!nextCam.isOpen()) {
             nextCam.close();

@@ -1,14 +1,10 @@
 package grillbaer.spectracle.camera;
 
-import grillbaer.spectracle.model.Observers;
 import lombok.Getter;
 import lombok.NonNull;
-import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.Closeable;
 import java.lang.reflect.Modifier;
 
@@ -16,18 +12,11 @@ public final class Camera implements Closeable {
     @Getter
     private final int id;
     private final VideoCapture videoCapture;
-    private final Mat frameMat;
-
-    //TODO: double buffer to avoid waiting times between UI and grab calls
-    //TODO: improve conversion to BufferedImage
-
-    @Getter
-    private Observers<Camera> frameGrabbedObservers = new Observers<>();
 
     public Camera(int id) {
         this.id = id;
         this.videoCapture = new VideoCapture(id);
-        this.frameMat = new Mat();
+
         // FIXME: find better location for res change
         setCameraProps(getCameraProps().withFrameWidth(1280).withFrameHeight(720));
     }
@@ -41,17 +30,8 @@ public final class Camera implements Closeable {
         this.videoCapture.release();
     }
 
-    public synchronized void grabNextFrame() {
-        videoCapture.read(this.frameMat);
-        this.frameGrabbedObservers.fire(this);
-    }
-
-    public synchronized Mat getFrameMat() {
-        return this.frameMat;
-    }
-
-    public synchronized BufferedImage getFrameImage() {
-        return convertMatToImage(this.frameMat);
+    public synchronized void grabNextFrame(@NonNull Frame targetFrame) {
+        targetFrame.grabFrom(this.videoCapture);
     }
 
     public synchronized void setCameraProps(@NonNull CameraProps cameraProps) {
@@ -75,21 +55,6 @@ public final class Camera implements Closeable {
 
     private double getProp(int propId) {
         return this.videoCapture.get(propId);
-    }
-
-    private static BufferedImage convertMatToImage(Mat mat) {
-        if (mat.rows() == 0 || mat.cols() == 0)
-            return null;
-
-        final int type = mat.channels() == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_3BYTE_BGR;
-        final var buffer = new byte[mat.width() * mat.channels() * mat.height()];
-        mat.get(0, 0, buffer);
-        final var image = new BufferedImage(mat.cols(), mat.rows(), type);
-        final var imageBuffer = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        //TODO: this certainly works without intermediate copy?
-        System.arraycopy(buffer, 0, imageBuffer, 0, buffer.length);
-
-        return image;
     }
 
     public synchronized void printAllProps() {

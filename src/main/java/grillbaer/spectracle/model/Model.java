@@ -2,9 +2,11 @@ package grillbaer.spectracle.model;
 
 import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
+import grillbaer.spectracle.camera.Frame;
 import grillbaer.spectracle.spectrum.Calibration;
 import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -23,13 +25,11 @@ public final class Model {
 
     private boolean cameraPaused = true;
     private final Observers<Boolean> cameraPausedObservers = new Observers<>();
-    private final Observers<Camera> frameGrabbedObservers = new Observers<>();
-    private final Observer<Camera> frameGrabbedHandler = camera -> {
-        SwingUtilities.invokeLater(() -> {
-            frameGrabbedObservers.fire(camera);
-            triggerNextFrameIfNotPaused();
-        });
-    };
+
+    @Getter(AccessLevel.NONE)
+    private Frame grabbingFrame = new Frame();
+    private Frame currentFrame = new Frame();
+    private final Observers<Frame> frameGrabbedObservers = new Observers<>();
 
     private @NonNull Calibration calibration = Calibration.createDefault();
     private final Observers<Calibration> calibrationObservers = new Observers<>();
@@ -47,27 +47,17 @@ public final class Model {
 
     private void updateSampleLineFromGrabbedFrame() {
         setSampleLine(
-                new SampleLine(camera.getFrameMat(),
-                        (int) (camera.getFrameMat().rows() * getSampleRowPosRatio()),
+                new SampleLine(this.currentFrame.getMat(),
+                        (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
                         getSampleRows()));
     }
 
     public void setCamera(Camera camera) {
-        if (this.camera == camera)
-            return;
-
-        if (this.camera != null) {
-            this.camera.getFrameGrabbedObservers().remove(this.frameGrabbedHandler);
+        if (this.camera != camera) {
+            this.camera = camera;
+            this.cameraObservers.fire(this.camera);
+            triggerNextFrameIfNotPaused();
         }
-
-        this.camera = camera;
-        this.cameraObservers.fire(this.camera);
-
-        if (this.camera != null) {
-            this.camera.getFrameGrabbedObservers().add(this.frameGrabbedHandler);
-        }
-
-        triggerNextFrameIfNotPaused();
     }
 
     public void setCameraPaused(boolean paused) {
@@ -86,8 +76,25 @@ public final class Model {
 
     private void triggerNextFrame() {
         if (this.camera != null) {
-            CompletableFuture.runAsync(() -> this.camera.grabNextFrame());
+            CompletableFuture.runAsync(() -> {
+                this.camera.grabNextFrame(this.grabbingFrame);
+                SwingUtilities.invokeLater(() -> {
+                    setCurrentFrame(this.grabbingFrame);
+                    triggerNextFrameIfNotPaused();
+                });
+            });
         }
+    }
+
+    public void grabSingleFrame() {
+        this.camera.grabNextFrame(this.grabbingFrame);
+        setCurrentFrame(this.grabbingFrame);
+    }
+
+    private void setCurrentFrame(@NonNull Frame newlyGrabbedFrame) {
+        this.grabbingFrame = this.currentFrame;
+        this.currentFrame = newlyGrabbedFrame;
+        this.frameGrabbedObservers.fire(this.currentFrame);
     }
 
     public CameraProps getCameraProps() {

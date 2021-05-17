@@ -1,15 +1,13 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.camera.Camera;
-import grillbaer.spectracle.model.Observer;
-import lombok.Getter;
+import grillbaer.spectracle.camera.Frame;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class CameraView extends JComponent {
-    @Getter
-    private Camera camera;
+
+    private Frame frame;
 
     private Double sampleRowRatio;
     private int sampleRows = 3;
@@ -17,21 +15,18 @@ public class CameraView extends JComponent {
     private Stroke sampleRowStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0f,
             new float[]{2f, 5f}, 0f);
 
-    private final Observer<Camera> cameraObserver = cam -> repaint();
+    public void setFrame(Frame frame) {
+        if (this.frame != frame) {
+            final var oldFrame = this.frame;
+            this.frame = frame;
 
-    public void setCamera(Camera camera) {
-        if (this.camera != null) {
-            this.camera.getFrameGrabbedObservers().remove(this.cameraObserver);
+            if (oldFrame == null || frame == null
+                    || oldFrame.getWidth() != this.frame.getWidth()
+                    || oldFrame.getHeight() != this.frame.getHeight()) {
+                revalidate();
+            }
+            repaint();
         }
-
-        this.camera = camera;
-
-        if (this.camera != null) {
-            this.camera.getFrameGrabbedObservers().add(this.cameraObserver);
-        }
-
-        revalidate();
-        repaint();
     }
 
     public void setSampleRowPosRatio(Double sampleRowRatio) {
@@ -47,9 +42,9 @@ public class CameraView extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (camera != null) {
+        if (this.frame != null) {
             final var insets = getInsets();
-            final var image = camera.getFrameImage();
+            final var image = this.frame.getImage();
             if (image != null) {
                 final int availableWidth = getWidth() - insets.left - insets.right;
                 final int availableHeight = getHeight() - insets.top - insets.bottom;
@@ -87,9 +82,9 @@ public class CameraView extends JComponent {
     @Override
     public Dimension getPreferredSize() {
         final var insets = getInsets();
-        if (camera != null) {
-            return new Dimension(insets.left + camera.getCameraProps().getFrameWidth() + insets.right,
-                    insets.top + camera.getCameraProps().getFrameHeight() + insets.bottom);
+        if (this.frame != null) {
+            return new Dimension(insets.left + this.frame.getWidth() + insets.right,
+                    insets.top + this.frame.getHeight() + insets.bottom);
         } else {
             return new Dimension(insets.left + 640 + insets.right,
                     insets.top + 480 + insets.bottom);

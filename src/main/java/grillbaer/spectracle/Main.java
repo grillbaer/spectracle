@@ -18,6 +18,7 @@ public class Main {
 
         final var context = new Context();
         context.getModel().setCamera(new Camera(0));
+        context.getModel().grabSingleFrame();
         context.getModel().setCameraPaused(false);
 
         SwingUtilities.invokeAndWait(() -> {
