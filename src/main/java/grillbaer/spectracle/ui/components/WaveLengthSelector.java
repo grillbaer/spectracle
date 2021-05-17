@@ -88,8 +88,11 @@ public class WaveLengthSelector {
                 matchingNamedWaveLength = candidate;
             }
         }
-
-        this.comboBox.setSelectedItem(WaveLengths.format(nanoMeters));
+        if (matchingNamedWaveLength != null) {
+            this.comboBox.setSelectedItem(matchingNamedWaveLength);
+        } else {
+            this.comboBox.setSelectedItem(WaveLengths.format(nanoMeters));
+        }
     }
 
     private void onChange() {

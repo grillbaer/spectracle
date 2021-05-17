@@ -21,7 +21,7 @@ public final class Geometry {
         return renderDim;
     }
 
-    public static Dimension scaleToFitWidth(int imageWidth, int imageHeight, int availableWidth, int availableHeight) {
+    public static Dimension scaleToFitWidth(int imageWidth, int imageHeight, int availableWidth) {
         final var renderDim = new Dimension(imageWidth, imageHeight);
         renderDim.width = availableWidth;
         renderDim.height = (int) ((long) imageHeight * availableWidth / imageWidth);

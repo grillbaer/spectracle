@@ -49,8 +49,7 @@ public class CameraView extends JComponent {
                 final int availableWidth = getWidth() - insets.left - insets.right;
                 final int availableHeight = getHeight() - insets.top - insets.bottom;
                 final Dimension renderDim = Geometry.scaleToFitWidth(
-                        image.getWidth(), image.getHeight(),
-                        availableWidth, availableHeight);
+                        image.getWidth(), image.getHeight(), availableWidth);
                 final var imageY0 = insets.top + (availableHeight - renderDim.height) / 2;
                 final var imageX0 = insets.left + (availableWidth - renderDim.width) / 2;
                 g.drawImage(image, imageX0, imageY0,

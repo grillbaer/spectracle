@@ -4,11 +4,16 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.lang.reflect.Modifier;
+import java.util.Locale;
 
 public final class Camera implements Closeable {
+    private static final Logger LOG = LoggerFactory.getLogger(Camera.class);
+
     @Getter
     private final int id;
     private final VideoCapture videoCapture;
@@ -17,7 +22,6 @@ public final class Camera implements Closeable {
         this.id = id;
         this.videoCapture = new VideoCapture(id);
 
-        // FIXME: find better location for res change
         setCameraProps(getCameraProps().withFrameWidth(1280).withFrameHeight(720));
     }
 
@@ -58,44 +62,47 @@ public final class Camera implements Closeable {
     }
 
     public synchronized void printAllProps() {
-        System.out.println("backend = " + this.videoCapture.getBackendName());
-        System.out.println("nativeObjectAddr = " + this.videoCapture.getNativeObjAddr());
+        LOG.info("Properties of camera id={} backend={} nativeObjectAddr={} :",
+                getId(), this.videoCapture.getBackendName(), this.videoCapture.getNativeObjAddr());
         for (var field : Videoio.class.getFields()) {
             if (field.getName().startsWith("CAP_PROP_") && field.getType() == int.class
                     && Modifier.isFinal(field.getModifiers())
                     && Modifier.isStatic(field.getModifiers())
                     && Modifier.isPublic(field.getModifiers())) {
                 final var name = field.getName();
-                final int id;
+                final int propId;
                 try {
-                    id = field.getInt(null);
-                    System.out.printf("prop %-40s %5d = %f\n", name, id, videoCapture.get(id));
+                    propId = field.getInt(null);
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info(String.format(Locale.ROOT, "  %-40s %5d = %f", name, propId, videoCapture.get(propId)));
+                    }
                 } catch (IllegalAccessException e) {
                     //ignore
                 }
-                // prop CAP_PROP_POS_MSEC          0 =    0,000000
-                // PROP_POS_FRAMES                 1 =    0,000000
-                // prop CAP_PROP_FRAME_WIDTH       3 =  640,000000
-                // prop CAP_PROP_FRAME_HEIGHT      4 =  480,000000
-                // prop CAP_PROP_FPS               5 =   30,000000
-                // prop CAP_PROP_FOURCC            6 =   20,000000
-                // prop CAP_PROP_MODE              9 =    0,000000
-                // prop CAP_PROP_BRIGHTNESS       10 =    0,000000
-                // prop CAP_PROP_CONTRAST         11 =   32,000000
-                // prop CAP_PROP_SATURATION       12 =   60,000000
-                // prop CAP_PROP_HUE              13 =    0,000000
-                // prop CAP_PROP_GAIN             14 =    0,000000
-                // prop CAP_PROP_EXPOSURE         15 =   -6,000000
-                // prop CAP_PROP_CONVERT_RGB      16 =    1,000000
-                // prop CAP_PROP_SHARPNESS        20 =    2,000000
-                // prop CAP_PROP_AUTO_EXPOSURE    21 =    0,000000
-                // prop CAP_PROP_GAMMA            22 =  100,000000
-                // prop CAP_PROP_TEMPERATURE      23 = 4600,000000
-                // prop CAP_PROP_BACKLIGHT        32 =    1,000000
-                // prop CAP_PROP_SAR_NUM          40 =    1,000000
-                // prop CAP_PROP_SAR_DEN          41 =    1,000000
-                // prop CAP_PROP_BACKEND          42 = 1400,000000
-                // prop CAP_PROP_ORIENTATION_AUTO 49 =   -1,000000
+                // Property example of a test cam:
+                // CAP_PROP_POS_MSEC          0 =    0,000000
+                // CAP_PROP_POS_FRAMES        1 =    0,000000
+                // CAP_PROP_FRAME_WIDTH       3 =  640,000000
+                // CAP_PROP_FRAME_HEIGHT      4 =  480,000000
+                // CAP_PROP_FPS               5 =   30,000000
+                // CAP_PROP_FOURCC            6 =   20,000000
+                // CAP_PROP_MODE              9 =    0,000000
+                // CAP_PROP_BRIGHTNESS       10 =    0,000000
+                // CAP_PROP_CONTRAST         11 =   32,000000
+                // CAP_PROP_SATURATION       12 =   60,000000
+                // CAP_PROP_HUE              13 =    0,000000
+                // CAP_PROP_GAIN             14 =    0,000000
+                // CAP_PROP_EXPOSURE         15 =   -6,000000
+                // CAP_PROP_CONVERT_RGB      16 =    1,000000
+                // CAP_PROP_SHARPNESS        20 =    2,000000
+                // CAP_PROP_AUTO_EXPOSURE    21 =    0,000000
+                // CAP_PROP_GAMMA            22 =  100,000000
+                // CAP_PROP_TEMPERATURE      23 = 4600,000000
+                // CAP_PROP_BACKLIGHT        32 =    1,000000
+                // CAP_PROP_SAR_NUM          40 =    1,000000
+                // CAP_PROP_SAR_DEN          41 =    1,000000
+                // CAP_PROP_BACKEND          42 = 1400,000000
+                // CAP_PROP_ORIENTATION_AUTO 49 =   -1,000000
             }
         }
     }

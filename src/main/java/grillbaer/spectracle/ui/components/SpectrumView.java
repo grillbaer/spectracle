@@ -15,7 +15,7 @@ public class SpectrumView extends JComponent {
     private Spectrum spectrum;
     private Rectangle graphArea;
 
-    private final int xAxisHeight = 20;
+    private static final int X_AXIS_HEIGHT = 20;
 
     private final Map<String, Cursor> xCursorsById = new TreeMap<>();
 
@@ -50,9 +50,9 @@ public class SpectrumView extends JComponent {
     @Override
     public Dimension getPreferredSize() {
         if (this.spectrum != null) {
-            return new Dimension(this.spectrum.getLength(), 100 + xAxisHeight);
+            return new Dimension(this.spectrum.getLength(), 100 + X_AXIS_HEIGHT);
         } else {
-            return new Dimension(400, 100 + xAxisHeight);
+            return new Dimension(400, 100 + X_AXIS_HEIGHT);
         }
     }
 
@@ -72,7 +72,7 @@ public class SpectrumView extends JComponent {
         final int x = insets.left;
         final int y = insets.top;
         final int w = getWidth() - insets.left - insets.right;
-        final int h = getHeight() - insets.top - insets.bottom - xAxisHeight;
+        final int h = getHeight() - insets.top - insets.bottom - X_AXIS_HEIGHT;
 
         return new Rectangle(x, y, w, h);
     }

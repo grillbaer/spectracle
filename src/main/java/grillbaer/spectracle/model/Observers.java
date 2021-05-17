@@ -10,18 +10,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class Observers<E> {
     private static final Logger LOG = LoggerFactory.getLogger(Observers.class);
 
-    private final List<Observer<E>> observers = new CopyOnWriteArrayList<>();
+    private final List<Observer<E>> observerList = new CopyOnWriteArrayList<>();
 
     public synchronized void add(@NonNull Observer<E> observer) {
-        this.observers.add(observer);
+        this.observerList.add(observer);
     }
 
     public synchronized void remove(@NonNull Observer<E> observer) {
-        this.observers.remove(observer);
+        this.observerList.remove(observer);
     }
 
     public synchronized void fire(E event) {
-        for (Observer<E> observer : this.observers) {
+        for (Observer<E> observer : this.observerList) {
             try {
                 observer.changed(event);
             } catch (Exception e) {
