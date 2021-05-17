@@ -27,8 +27,20 @@ public class Main {
             final var frame = new JFrame("Spectracle");
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.getContentPane().add(mainPanel.getComponent(), BorderLayout.CENTER);
-            frame.pack();
+            setDefaultWindowBounds(frame);
             frame.setVisible(true);
         });
+    }
+
+    private static void setDefaultWindowBounds(JFrame frame) {
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        size.width *= 0.8;
+        size.height *= 0.8;
+        if ((double) size.width / size.height > 2) {
+            // extremely broad screens
+            size.width = size.height * 2;
+        }
+        frame.setSize(size.width, size.height);
+        frame.setLocationRelativeTo(null);
     }
 }

@@ -50,15 +50,15 @@ public class SpectrumView extends JComponent {
     @Override
     public Dimension getPreferredSize() {
         if (this.spectrum != null) {
-            return new Dimension(this.spectrum.getLength(), 200 + xAxisHeight);
+            return new Dimension(this.spectrum.getLength(), 100 + xAxisHeight);
         } else {
-            return new Dimension(400, 200 + xAxisHeight);
+            return new Dimension(400, 100 + xAxisHeight);
         }
     }
 
     @Override
     public Dimension getMinimumSize() {
-        return getPreferredSize();
+        return new Dimension(300, 100);
     }
 
     @Override

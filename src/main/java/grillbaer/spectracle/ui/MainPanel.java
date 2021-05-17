@@ -24,7 +24,7 @@ public class MainPanel {
         this.topBottomSplit.setContinuousLayout(true);
         this.topBottomSplit.setTopComponent(this.spectrumPanel.getComponent());
         this.topBottomSplit.setBottomComponent(this.cameraPanel.getComponent());
-        this.topBottomSplit.setDividerLocation(0.5);
+        this.topBottomSplit.setResizeWeight(0.7);
 
         this.panel = new JPanel(new BorderLayout());
         this.panel.add(this.topBottomSplit, BorderLayout.CENTER);

@@ -90,4 +90,9 @@ public class CameraView extends JComponent {
                     insets.top + 480 + insets.bottom);
         }
     }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(200, 80);
+    }
 }
