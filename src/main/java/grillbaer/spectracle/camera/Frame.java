@@ -19,22 +19,23 @@ public final class Frame {
 
     public void grabFrom(@NonNull VideoCapture videoCapture) {
         videoCapture.read(this.mat);
-        this.image = convertMatToImage(this.mat);
+        updateImage();
     }
 
-    private static BufferedImage convertMatToImage(Mat mat) {
-        if (mat.rows() == 0 || mat.cols() == 0)
-            return null;
+    private void updateImage() {
+        if (mat.rows() == 0 || mat.cols() == 0) {
+            this.image = null;
+            return;
+        }
 
-        final int type = mat.channels() == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_3BYTE_BGR;
-        final var buffer = new byte[mat.width() * mat.channels() * mat.height()];
-        mat.get(0, 0, buffer);
-        final var image = new BufferedImage(mat.cols(), mat.rows(), type);
+        final int imageType = mat.channels() == 1 ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_3BYTE_BGR;
+        if (this.image == null || this.image.getType() != imageType || this.image.getWidth() != mat.cols() || this.image
+                .getHeight() != mat.rows()) {
+            this.image = new BufferedImage(mat.cols(), mat.rows(), imageType);
+        }
+
         final var imageBuffer = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-
-        System.arraycopy(buffer, 0, imageBuffer, 0, buffer.length);
-
-        return image;
+        mat.get(0, 0, imageBuffer);
     }
 
     public int getWidth() {
