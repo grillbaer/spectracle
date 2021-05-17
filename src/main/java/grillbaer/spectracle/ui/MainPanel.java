@@ -22,6 +22,7 @@ public class MainPanel {
 
         this.topBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         this.topBottomSplit.setContinuousLayout(true);
+        this.topBottomSplit.setDividerSize(16);
         this.topBottomSplit.setTopComponent(this.spectrumPanel.getComponent());
         this.topBottomSplit.setBottomComponent(this.cameraPanel.getComponent());
         this.topBottomSplit.setResizeWeight(0.7);
