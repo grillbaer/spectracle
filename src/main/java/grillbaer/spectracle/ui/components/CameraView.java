@@ -13,7 +13,7 @@ public class CameraView extends JComponent {
     private int sampleRows = 3;
     private Color sampleRowColor = new Color(255, 255, 255, 128);
     private Stroke sampleRowStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0f,
-            new float[]{2f, 5f}, 0f);
+            new float[]{4f, 8f}, 0f);
 
     public void setFrame(Frame frame) {
         if (this.frame != frame) {
@@ -46,15 +46,18 @@ public class CameraView extends JComponent {
             final var insets = getInsets();
             final var image = this.frame.getImage();
             if (image != null) {
+                final var g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
                 final int availableWidth = getWidth() - insets.left - insets.right;
                 final int availableHeight = getHeight() - insets.top - insets.bottom;
                 final Dimension renderDim = Geometry.scaleToFitWidth(
                         image.getWidth(), image.getHeight(), availableWidth);
                 final var imageY0 = insets.top + (availableHeight - renderDim.height) / 2;
                 final var imageX0 = insets.left + (availableWidth - renderDim.width) / 2;
-                g.drawImage(image, imageX0, imageY0,
+                g2.drawImage(image, imageX0, imageY0,
                         renderDim.width, renderDim.height, null);
-                drawSampleRow((Graphics2D) g, imageX0, imageY0, renderDim.width, renderDim.height);
+                drawSampleRow(g2, imageX0, imageY0, renderDim.width, renderDim.height);
             }
         }
     }

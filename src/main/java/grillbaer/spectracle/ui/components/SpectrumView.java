@@ -83,8 +83,8 @@ public class SpectrumView extends JComponent {
         if (this.spectrum != null) {
             updateGraphArea();
             final var g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
             clearGraphArea(g2);
             drawSpectrumGraph(g2);
@@ -167,7 +167,7 @@ public class SpectrumView extends JComponent {
             final int y = (int) valueToY(value);
             final var color = SpectralColors.getColorForWaveLength((float) nanoMeters);
             g2.setColor(color);
-            g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX) + 1, this.graphArea.y + this.graphArea.height - y);
+            g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.graphArea.y + this.graphArea.height - y);
             lastX = x;
         }
     }
