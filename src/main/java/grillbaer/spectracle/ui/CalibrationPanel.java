@@ -31,6 +31,8 @@ public class CalibrationPanel {
     private final Cursor cursor0;
     private final Cursor cursor1;
 
+    private boolean active;
+
     public CalibrationPanel(@NonNull Context context, @NonNull SpectrumView spectrumView) {
         this.context = context;
         this.spectrumView = spectrumView;
@@ -40,11 +42,11 @@ public class CalibrationPanel {
         this.calibrateButton.addActionListener(e -> beginCalibration());
 
         this.cal0WaveLengthSelector = new WaveLengthSelector("λ₀=", CAL_0_COLOR);
-        this.cal0WaveLengthSelector.getChangeObservers().add(wl -> updateEnabled());
+        this.cal0WaveLengthSelector.getChangeObservers().add(wl -> waveLengthSelectionChanged());
         this.cal0WaveLengthSelector.addActionListener(e -> this.cal0WaveLengthSelector.transferFocus());
 
         this.cal1WaveLengthSelector = new WaveLengthSelector("λ₁=", CAL_1_COLOR);
-        this.cal1WaveLengthSelector.getChangeObservers().add(wl -> updateEnabled());
+        this.cal1WaveLengthSelector.getChangeObservers().add(wl -> waveLengthSelectionChanged());
         this.cal1WaveLengthSelector.addActionListener(e -> this.cal1WaveLengthSelector.transferFocus());
 
         this.okButton = Buttons.createOkButton();
@@ -69,8 +71,8 @@ public class CalibrationPanel {
                 () -> getCursorLabel(this.cal1WaveLengthSelector, "λ₁"), CAL_1_COLOR);
         this.cursor1.setDraggable(true);
 
-        updateForCalibration(false);
-        updateEnabled();
+        updateForCalibration();
+        waveLengthSelectionChanged();
     }
 
     public JComponent getComponent() {
@@ -84,8 +86,9 @@ public class CalibrationPanel {
         return waveLength != null ? baseLabel + " to " + waveLength.getWaveLengthNameString(false) + " here" : baseLabel;
     }
 
-    private void updateEnabled() {
+    private void waveLengthSelectionChanged() {
         this.okButton.setEnabled(isValid());
+        updateCursors();
     }
 
     private boolean isValid() {
@@ -96,22 +99,27 @@ public class CalibrationPanel {
     }
 
     private void beginCalibration() {
+        this.active = true;
+
         final var calibration = this.context.getModel().getCalibration();
-        final var waveLengthA = calibration.getWaveLengthCal0().getNanoMeters();
-        final var waveLengthB = calibration.getWaveLengthCal1().getNanoMeters();
+        final var waveLengthA = calibration.getWaveLengthPoint0().getNanoMeters();
+        final var waveLengthB = calibration.getWaveLengthPoint1().getNanoMeters();
         this.cursor0.setValue(waveLengthA);
         this.cursor1.setValue(waveLengthB);
         this.cal0WaveLengthSelector.setWaveLength(waveLengthA);
         this.cal1WaveLengthSelector.setWaveLength(waveLengthB);
 
-        updateForCalibration(true);
+        updateForCalibration();
     }
 
     private void abortCalibration() {
-        updateForCalibration(false);
+        this.active = false;
+        updateForCalibration();
     }
 
     private void applyCalibration() {
+        this.active = false;
+
         final NamedWaveLength targetWLA = this.cal0WaveLengthSelector.getValidWaveLength();
         final NamedWaveLength targetWLB = this.cal1WaveLengthSelector.getValidWaveLength();
         if (targetWLA != null && targetWLB != null) {
@@ -122,24 +130,28 @@ public class CalibrationPanel {
             final double targetRatioB = (double) oldCal.nanoMetersToIndex(spectrum.getLength(), cursor1.getValue())
                     / spectrum.getLength();
             final var newCal = Calibration.create(
-                    new Calibration.Point(targetRatioA, targetWLA.getNanoMeters()),
-                    new Calibration.Point(targetRatioB, targetWLB.getNanoMeters()));
+                    new Calibration.WaveLengthPoint(targetRatioA, targetWLA.getNanoMeters()),
+                    new Calibration.WaveLengthPoint(targetRatioB, targetWLB.getNanoMeters()));
             this.context.getModel().setCalibration(newCal);
         }
 
-        updateForCalibration(false);
+        updateForCalibration();
     }
 
-    private void updateForCalibration(boolean active) {
-        this.calibrateButton.setEnabled(!active);
-        this.cal0WaveLengthSelector.getComponent().setVisible(active);
-        this.cal1WaveLengthSelector.getComponent().setVisible(active);
-        this.okButton.setVisible(active);
-        this.cancelButton.setVisible(active);
+    private void updateForCalibration() {
+        this.calibrateButton.setEnabled(!this.active);
+        this.cal0WaveLengthSelector.getComponent().setVisible(this.active);
+        this.cal1WaveLengthSelector.getComponent().setVisible(this.active);
+        this.okButton.setVisible(this.active);
+        this.cancelButton.setVisible(this.active);
 
-        if (active) {
-            this.spectrumView.putXCursor(cursor0);
-            this.spectrumView.putXCursor(cursor1);
+        updateCursors();
+    }
+
+    private void updateCursors() {
+        if (this.active) {
+            this.spectrumView.putXCursor(this.cursor0);
+            this.spectrumView.putXCursor(this.cursor1);
         } else {
             this.spectrumView.removeXCursor(cursor0.getId());
             this.spectrumView.removeXCursor(cursor1.getId());
