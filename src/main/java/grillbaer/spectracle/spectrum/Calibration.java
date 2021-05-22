@@ -49,24 +49,27 @@ public final class Calibration {
         return this.waveLengthPoints.get(1);
     }
 
-    public static double indexToRatio(int sampleLength, int index) {
-        return (double) index / (sampleLength - 1);
+    public static double indexToRatio(int length, int index) {
+        return (double) index / (length - 1);
     }
 
-    public static int ratioToIndex(int sampleLength, double ratio) {
-        return (int) Math.round(ratio * (sampleLength - 1));
+    public static int ratioToIndex(int length, double ratio) {
+        return (int) Math.round(ratio * (length - 1));
     }
 
-    public double indexToNanoMeters(int sampleLength, int index) {
+    public double indexToNanoMeters(int length, int index) {
         return getWaveLengthPoint0().getNanoMeters()
-                + getDeltaNanoMeters() * ((indexToRatio(sampleLength, index) - this.getWaveLengthPoint0()
+                + getDeltaNanoMeters() * ((indexToRatio(length, index) - this.getWaveLengthPoint0()
                 .getRatio()) / getDeltaRatio());
     }
 
-    public int nanoMetersToIndex(int sampleLength, double nanoMeters) {
-        return ratioToIndex(sampleLength,
-                getWaveLengthPoint0().getRatio()
-                        + getDeltaRatio() * (nanoMeters - getWaveLengthPoint0().getNanoMeters()) / getDeltaNanoMeters());
+    public int nanoMetersToIndex(int length, double nanoMeters) {
+        return ratioToIndex(length, nanoMetersToRatio(nanoMeters));
+    }
+
+    public double nanoMetersToRatio(double nanoMeters) {
+        return getWaveLengthPoint0().getRatio()
+                + getDeltaRatio() * (nanoMeters - getWaveLengthPoint0().getNanoMeters()) / getDeltaNanoMeters();
     }
 
     private double getDeltaNanoMeters() {
@@ -75,6 +78,26 @@ public final class Calibration {
 
     private double getDeltaRatio() {
         return getWaveLengthPoint1().getRatio() - getWaveLengthPoint0().getRatio();
+    }
+
+    public double getBeginNanoMeters() {
+        return indexToNanoMeters(2, 0);
+    }
+
+    public double getEndNanoMeters() {
+        return indexToNanoMeters(2, 1);
+    }
+
+    public double getMinNanoMeters() {
+        return Math.min(getBeginNanoMeters(), getEndNanoMeters());
+    }
+
+    public double getMaxNanoMeters() {
+        return Math.max(getBeginNanoMeters(), getEndNanoMeters());
+    }
+
+    public double getNanoMeterRange() {
+        return Math.abs(getMaxNanoMeters() - getMinNanoMeters());
     }
 
     @EqualsAndHashCode

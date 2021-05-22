@@ -2,11 +2,9 @@ package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.camera.Frame;
 
-import javax.swing.*;
 import java.awt.*;
 
-public class CameraView extends JComponent {
-
+public class CameraView extends SpectralXView {
     private Frame frame;
 
     private Double sampleRowRatio;
@@ -14,6 +12,10 @@ public class CameraView extends JComponent {
     private Color sampleRowColor = new Color(255, 255, 255, 128);
     private Stroke sampleRowStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0f,
             new float[]{4f, 8f}, 0f);
+
+    public CameraView() {
+        super(0);
+    }
 
     public void setFrame(Frame frame) {
         if (this.frame != frame) {
@@ -40,44 +42,63 @@ public class CameraView extends JComponent {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    protected void drawView(Graphics2D g2) {
         if (this.frame != null) {
             final var insets = getInsets();
             final var image = this.frame.getImage();
             if (image != null) {
-                final var g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
                 final int availableWidth = getWidth() - insets.left - insets.right;
                 final int availableHeight = getHeight() - insets.top - insets.bottom;
                 final Dimension renderDim = Geometry.scaleToFitWidth(
                         image.getWidth(), image.getHeight(), availableWidth);
                 final var imageY0 = insets.top + (availableHeight - renderDim.height) / 2;
                 final var imageX0 = insets.left + (availableWidth - renderDim.width) / 2;
+
                 g2.drawImage(image, imageX0, imageY0,
                         renderDim.width, renderDim.height, null);
-                drawSampleRow(g2, imageX0, imageY0, renderDim.width, renderDim.height);
+
+                drawXGridOverlay(g2);
+                Rectangle bounds = calcSampleRowBounds(imageX0, imageY0, renderDim.width, renderDim.height);
+                if (bounds != null) {
+                    final var origClip = g2.getClip();
+                    g2.clipRect(bounds.x, bounds.y - 3, bounds.width, bounds.height + 6);
+                    g2.drawImage(image, imageX0, imageY0,
+                            renderDim.width, renderDim.height, null);
+                    g2.setClip(origClip);
+                    drawSampleRowBounds(g2, bounds);
+                }
             }
         }
     }
 
-    private void drawSampleRow(Graphics2D g2, int imageX0, int imageY0, int imageWidth, int imageHeight) {
-        if (this.sampleRowRatio != null) {
-            final var origColor = g2.getColor();
-            final var origStroke = g2.getStroke();
-            g2.setColor(this.sampleRowColor);
-            g2.setStroke(this.sampleRowStroke);
+    private Rectangle calcSampleRowBounds(int imageX0, int imageY0, int imageWidth, int imageHeight) {
+        if (this.sampleRowRatio == null)
+            return null;
 
-            final int y = imageY0 + (int) (imageHeight * this.sampleRowRatio);
-            final int y0 = y - this.sampleRows / 2;
-            final int y1 = y0 + this.sampleRows;
-            g2.drawLine(imageX0, y0 - 1, imageX0 + imageWidth, y0 - 1);
-            g2.drawLine(imageX0, y1 + 1, imageX0 + imageWidth, y1 + 1);
+        final int y = imageY0 + (int) (imageHeight * this.sampleRowRatio);
+        final int y0 = y - this.sampleRows / 2;
 
-            g2.setStroke(origStroke);
-            g2.setColor(origColor);
-        }
+        return new Rectangle(imageX0, y0, imageWidth, this.sampleRows);
+    }
+
+    private void drawSampleRowBounds(Graphics2D g2, Rectangle bounds) {
+        if (bounds == null)
+            return;
+
+        final var origColor = g2.getColor();
+        final var origStroke = g2.getStroke();
+        g2.setColor(this.sampleRowColor);
+        g2.setStroke(this.sampleRowStroke);
+
+        final var x0 = bounds.x;
+        final var x1 = bounds.x + bounds.width - 1;
+        final var y0 = bounds.y - 1;
+        final var y1 = bounds.y + bounds.height;
+        g2.drawLine(x0, y0, x1, y0);
+        g2.drawLine(x0, y1, x1, y1);
+
+        g2.setStroke(origStroke);
+        g2.setColor(origColor);
     }
 
 

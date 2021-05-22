@@ -28,6 +28,10 @@ public class CameraPanel {
         this.cameraView = new CameraView();
         this.cameraView.setSampleRowPosRatio(this.context.getModel().getSampleRowPosRatio());
         this.cameraView.setSampleRows(this.context.getModel().getSampleRows());
+
+        this.cameraView.setCalibration(this.context.getModel().getCalibration());
+        this.context.getModel().getCalibrationObservers().add(this.cameraView::setCalibration);
+
         this.cameraView.setFrame(this.context.getModel().getCurrentFrame());
         this.context.getModel().getFrameGrabbedObservers().add(this.cameraView::setFrame);
 

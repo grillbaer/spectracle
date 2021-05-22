@@ -70,6 +70,8 @@ public final class Model {
                 this.camera.setCameraProps(getCameraProps());
             }
             this.cameraObservers.fire(this.camera);
+            this.calibrationObservers.fire(getCalibration());
+            this.cameraPropsObservers.fire(getCameraProps());
             triggerNextFrameIfNotPaused();
         }
     }

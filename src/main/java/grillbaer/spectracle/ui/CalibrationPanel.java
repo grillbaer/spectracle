@@ -5,7 +5,7 @@ import grillbaer.spectracle.spectrum.Calibration;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
 import grillbaer.spectracle.ui.components.Buttons;
 import grillbaer.spectracle.ui.components.Cursor;
-import grillbaer.spectracle.ui.components.SpectrumView;
+import grillbaer.spectracle.ui.components.SpectrumGraphView;
 import grillbaer.spectracle.ui.components.WaveLengthSelector;
 import lombok.NonNull;
 
@@ -27,15 +27,15 @@ public class CalibrationPanel {
     private final JButton okButton;
     private final JButton cancelButton;
 
-    private final SpectrumView spectrumView;
+    private final SpectrumGraphView spectrumGraphView;
     private final Cursor cursor0;
     private final Cursor cursor1;
 
     private boolean active;
 
-    public CalibrationPanel(@NonNull Context context, @NonNull SpectrumView spectrumView) {
+    public CalibrationPanel(@NonNull Context context, @NonNull SpectrumGraphView spectrumGraphView) {
         this.context = context;
-        this.spectrumView = spectrumView;
+        this.spectrumGraphView = spectrumGraphView;
 
         final var triangularRuler = "\uD83D\uDCD0";
         this.calibrateButton = new JButton(triangularRuler + " Calibrate");
@@ -123,12 +123,9 @@ public class CalibrationPanel {
         final NamedWaveLength targetWLA = this.cal0WaveLengthSelector.getValidWaveLength();
         final NamedWaveLength targetWLB = this.cal1WaveLengthSelector.getValidWaveLength();
         if (targetWLA != null && targetWLB != null) {
-            final var spectrum = this.spectrumView.getSpectrum();
             final var oldCal = this.context.getModel().getCalibration();
-            final double targetRatioA = (double) oldCal.nanoMetersToIndex(spectrum.getLength(), cursor0.getValue())
-                    / spectrum.getLength();
-            final double targetRatioB = (double) oldCal.nanoMetersToIndex(spectrum.getLength(), cursor1.getValue())
-                    / spectrum.getLength();
+            final double targetRatioA = oldCal.nanoMetersToRatio(cursor0.getValue());
+            final double targetRatioB = oldCal.nanoMetersToRatio(cursor1.getValue());
             final var newCal = Calibration.create(
                     new Calibration.WaveLengthPoint(targetRatioA, targetWLA.getNanoMeters()),
                     new Calibration.WaveLengthPoint(targetRatioB, targetWLB.getNanoMeters()));
@@ -150,11 +147,11 @@ public class CalibrationPanel {
 
     private void updateCursors() {
         if (this.active) {
-            this.spectrumView.putXCursor(this.cursor0);
-            this.spectrumView.putXCursor(this.cursor1);
+            this.spectrumGraphView.putXCursor(this.cursor0);
+            this.spectrumGraphView.putXCursor(this.cursor1);
         } else {
-            this.spectrumView.removeXCursor(cursor0.getId());
-            this.spectrumView.removeXCursor(cursor1.getId());
+            this.spectrumGraphView.removeXCursor(cursor0.getId());
+            this.spectrumGraphView.removeXCursor(cursor1.getId());
         }
     }
 }

@@ -4,7 +4,7 @@ import grillbaer.spectracle.Context;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
 import grillbaer.spectracle.spectrum.WaveLengths;
 import grillbaer.spectracle.ui.components.Cursor;
-import grillbaer.spectracle.ui.components.SpectrumView;
+import grillbaer.spectracle.ui.components.SpectrumGraphView;
 import lombok.NonNull;
 
 import javax.swing.*;
@@ -16,7 +16,7 @@ public class SpectrumPanel {
     private final Context context;
 
     private final JPanel panel;
-    private final SpectrumView spectrumView;
+    private final SpectrumGraphView spectrumGraphView;
     private final CalibrationPanel calibrationPanel;
     private final List<Cursor> commonWaveLengthCursors;
 
@@ -24,23 +24,23 @@ public class SpectrumPanel {
         this.context = context;
 
         this.panel = new JPanel(new BorderLayout());
-        this.spectrumView = new SpectrumView();
+        this.spectrumGraphView = new SpectrumGraphView();
 
         final var commonWaveLengthsButton = new JToggleButton("Common Wavelengths");
         commonWaveLengthsButton.addActionListener(e -> showKnownWaveLengths(commonWaveLengthsButton.isSelected()));
 
-        this.calibrationPanel = new CalibrationPanel(this.context, this.spectrumView);
+        this.calibrationPanel = new CalibrationPanel(this.context, this.spectrumGraphView);
         this.calibrationPanel.getComponent().setVisible(true);
 
         final var controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(this.calibrationPanel.getComponent());
         controlPanel.add(commonWaveLengthsButton);
 
-        this.panel.add(this.spectrumView, BorderLayout.CENTER);
+        this.panel.add(this.spectrumGraphView, BorderLayout.CENTER);
         this.panel.add(controlPanel, BorderLayout.SOUTH);
 
         this.context.getModel().getSpectrumObservers()
-                .add(this.spectrumView::setSpectrum);
+                .add(this.spectrumGraphView::setSpectrum);
 
         this.commonWaveLengthCursors = NamedWaveLength.COMMON_WAVELENGTHS.stream()
                 .map(wl -> new Cursor("common_wl_" + wl.getName(), wl.getNanoMeters(),
@@ -55,9 +55,9 @@ public class SpectrumPanel {
     private void showKnownWaveLengths(boolean show) {
         for (Cursor cursor : this.commonWaveLengthCursors) {
             if (show) {
-                this.spectrumView.putXCursor(cursor);
+                this.spectrumGraphView.putXCursor(cursor);
             } else {
-                this.spectrumView.removeXCursor(cursor.getId());
+                this.spectrumGraphView.removeXCursor(cursor.getId());
             }
         }
     }
