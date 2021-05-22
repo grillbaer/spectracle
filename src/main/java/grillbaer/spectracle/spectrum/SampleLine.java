@@ -3,12 +3,32 @@ package grillbaer.spectracle.spectrum;
 import lombok.NonNull;
 import org.opencv.core.Mat;
 
+import java.util.function.Function;
+
 public class SampleLine {
     private final float[] values;
 
-    public SampleLine(@NonNull Mat mat, int centerRow, int rows) {
+    public static final Function<float[], Float> PIXEL_CHANNEL_AVERAGE = pixel -> {
+        float value = 0f;
+        for (float channel : pixel) {
+            value += channel;
+        }
+        return value / pixel.length;
+    };
+
+    public static final Function<float[], Float> PIXEL_CHANNEL_MAX = pixel -> {
+        float value = 0f;
+        for (float channel : pixel) {
+            if (value < channel)
+                value = channel;
+        }
+        return value;
+    };
+
+    public SampleLine(@NonNull Mat mat, int centerRow, int rows, Function<float[], Float> pixelFunction) {
         this.values = new float[mat.cols()];
-        final var pixel = new byte[mat.channels()];
+        final var rawPixel = new byte[mat.channels()];
+        final var normPixel = new float[mat.channels()];
 
         for (var rowOffset = 0; rowOffset < rows; rowOffset++) {
 
@@ -18,13 +38,14 @@ public class SampleLine {
 
             for (var col = 0; col < mat.cols(); col++) {
 
-                mat.get(row, col, pixel);
-                var value = 0f;
-                for (byte b : pixel) {
-                    value += (((int) b) & 0xff) / 256f;
+                mat.get(row, col, rawPixel);
+                for (int i = 0; i < rawPixel.length; i++) {
+                    normPixel[i] = (((int) rawPixel[i]) & 0xff) / 256f;
                 }
 
-                values[col] += value / pixel.length / rows;
+                var value = pixelFunction.apply(normPixel);
+
+                values[col] += value / rows;
             }
         }
     }

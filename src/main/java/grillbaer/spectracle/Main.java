@@ -17,7 +17,9 @@ public class Main {
         OpenCV.loadLocally();
 
         final var context = new Context();
-        context.getModel().setCamera(new Camera(0));
+        if (context.getModel().getCameraId() == null) {
+            context.getModel().setCamera(new Camera(0));
+        }
         context.getModel().grabSingleFrame();
         context.getModel().setCameraPaused(false);
 
@@ -37,7 +39,7 @@ public class Main {
         size.width *= 0.8;
         size.height *= 0.8;
         if ((double) size.width / size.height > 2) {
-            // extremely broad screens
+            // limit ratio on extremely broad screens
             size.width = size.height * 2;
         }
         frame.setSize(size.width, size.height);

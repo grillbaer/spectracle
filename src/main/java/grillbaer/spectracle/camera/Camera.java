@@ -17,12 +17,13 @@ public final class Camera implements Closeable {
     @Getter
     private final int id;
     private final VideoCapture videoCapture;
+    private CameraProps cameraProps;
 
     public Camera(int id) {
         this.id = id;
         this.videoCapture = new VideoCapture(id);
 
-        setCameraProps(getCameraProps().withFrameWidth(1280).withFrameHeight(720));
+        setCameraProps(getBackendCameraProps().withFrameWidth(1280).withFrameHeight(720));
     }
 
     public synchronized boolean isOpen() {
@@ -39,20 +40,25 @@ public final class Camera implements Closeable {
     }
 
     public synchronized void setCameraProps(@NonNull CameraProps cameraProps) {
-        setProp(Videoio.CAP_PROP_FRAME_WIDTH, cameraProps.getFrameWidth());
-        setProp(Videoio.CAP_PROP_FRAME_HEIGHT, cameraProps.getFrameHeight());
-        setProp(Videoio.CAP_PROP_EXPOSURE, cameraProps.getExposure());
+        this.cameraProps = cameraProps;
+        setProp(Videoio.CAP_PROP_FRAME_WIDTH, cameraProps.getFrameWidth(), false);
+        setProp(Videoio.CAP_PROP_FRAME_HEIGHT, cameraProps.getFrameHeight(), false);
+        setProp(Videoio.CAP_PROP_EXPOSURE, cameraProps.getExposure(), true);
     }
 
     public synchronized CameraProps getCameraProps() {
+        return this.cameraProps;
+    }
+
+    public synchronized CameraProps getBackendCameraProps() {
         return new CameraProps(
                 (int) getProp(Videoio.CAP_PROP_FRAME_WIDTH),
                 (int) getProp(Videoio.CAP_PROP_FRAME_HEIGHT),
                 getProp(Videoio.CAP_PROP_EXPOSURE));
     }
 
-    private void setProp(int propId, double value) {
-        if (getProp(propId) != value) {
+    private void setProp(int propId, double value, boolean force) {
+        if (force ||this.videoCapture.get(propId) != value) {
             this.videoCapture.set(propId, value);
         }
     }

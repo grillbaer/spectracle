@@ -25,17 +25,17 @@ class CalibrationTest {
     @Test
     void indexToNanoMetersAtCalPoints() {
         final var cal = Calibration.createDefault();
-        assertEquals(cal.getWaveLengthCal0().getNanoMeters(),
+        assertEquals(cal.getWaveLengthPoint0().getNanoMeters(),
                 cal.indexToNanoMeters(400, 0));
-        assertEquals(cal.getWaveLengthCal1().getNanoMeters(),
+        assertEquals(cal.getWaveLengthPoint1().getNanoMeters(),
                 cal.indexToNanoMeters(400, 399));
     }
 
     @Test
     void indexToNanoMetersInterpolation() {
         final var cal = Calibration.create(
-                new Calibration.Point(Calibration.indexToRatio(400, 100), 400.),
-                new Calibration.Point(Calibration.indexToRatio(400, 299), 800.));
+                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 100), 400.),
+                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 299), 800.));
         assertEquals(200., cal.indexToNanoMeters(400, 0), 1.5);
         assertEquals(400., cal.indexToNanoMeters(400, 100));
         assertEquals(600., cal.indexToNanoMeters(400, 200), 1.5);
@@ -46,8 +46,8 @@ class CalibrationTest {
     @Test
     void nanoMetersToIndex() {
         final var cal = Calibration.create(
-                new Calibration.Point(Calibration.indexToRatio(400, 100), 400.),
-                new Calibration.Point(Calibration.indexToRatio(400, 299), 800.));
+                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 100), 400.),
+                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 299), 800.));
         assertEquals(0, cal.nanoMetersToIndex(400, 200.));
         assertEquals(100, cal.nanoMetersToIndex(400, 400.));
         assertEquals(200, cal.nanoMetersToIndex(400, 600.));

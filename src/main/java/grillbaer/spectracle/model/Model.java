@@ -11,17 +11,20 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import javax.swing.*;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Model containing a camera, the spectra obtained from it, properties and user interface states.
+ * Model containing a camera, the frames and spectra obtained from it, properties and user interface states.
+ * The model must only be accessed from the AWT EventDispatchThread.
  */
 @Getter
 public final class Model {
     private Camera camera;
     private final Observers<Camera> cameraObservers = new Observers<>();
-    private final Observers<CameraProps> cameraPropsObservers = new Observers<>();
 
     private boolean cameraPaused = true;
     private final Observers<Boolean> cameraPausedObservers = new Observers<>();
@@ -31,15 +34,18 @@ public final class Model {
     private Frame currentFrame = new Frame();
     private final Observers<Frame> frameGrabbedObservers = new Observers<>();
 
-    private @NonNull Calibration calibration = Calibration.createDefault();
+    @Getter(AccessLevel.NONE)
+    private final Map<Integer, CameraProps> cameraPropsByCameraId = new TreeMap<>();
+    private final Observers<CameraProps> cameraPropsObservers = new Observers<>();
+
+    @Getter(AccessLevel.NONE)
+    private final Map<Integer, Calibration> calibrationByCameraId = new TreeMap<>();
     private final Observers<Calibration> calibrationObservers = new Observers<>();
 
-    private double sampleRowPosRatio = 0.5;
-    private int sampleRows = 3;
-
     private Spectrum spectrum;
-
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
+    private double sampleRowPosRatio = 0.5;
+    private int sampleRows = 10;
 
     public Model() {
         getFrameGrabbedObservers().add(cam -> updateSampleLineFromGrabbedFrame());
@@ -49,15 +55,27 @@ public final class Model {
         setSampleLine(
                 new SampleLine(this.currentFrame.getMat(),
                         (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
-                        getSampleRows()));
+                        getSampleRows(), SampleLine.PIXEL_CHANNEL_MAX));
     }
 
+    /**
+     * Set a camera to use.
+     * Note: it's the callers responsibility to have the new camera successfully opened and to cleanly close
+     * the previous camera.
+     */
     public void setCamera(Camera camera) {
         if (this.camera != camera) {
             this.camera = camera;
+            if (getCameraProps() != null) {
+                this.camera.setCameraProps(getCameraProps());
+            }
             this.cameraObservers.fire(this.camera);
             triggerNextFrameIfNotPaused();
         }
+    }
+
+    public Integer getCameraId() {
+        return this.camera != null ? this.camera.getId() : null;
     }
 
     public void setCameraPaused(boolean paused) {
@@ -97,38 +115,109 @@ public final class Model {
         this.frameGrabbedObservers.fire(this.currentFrame);
     }
 
+    public CameraProps getCameraProps(Integer cameraId) {
+        return this.cameraPropsByCameraId.get(cameraId);
+    }
+
     public CameraProps getCameraProps() {
-        return this.camera != null ? this.camera.getCameraProps() : null;
+        if (getCameraId() == null)
+            return null;
+
+        final var props = getCameraProps(getCameraId());
+        if (props != null)
+            return props;
+
+        return getCamera().getBackendCameraProps();
+    }
+
+    public void setCameraProps(int cameraId, CameraProps cameraProps) {
+        final var oldProps = this.cameraPropsByCameraId.put(cameraId, cameraProps);
+        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldProps, cameraProps)) {
+            if (cameraProps != null) {
+                this.camera.setCameraProps(cameraProps);
+            }
+            this.cameraPropsObservers.fire(cameraProps);
+        }
     }
 
     public void setCameraProps(@NonNull CameraProps cameraProps) {
-        if (this.camera != null) {
-            final var oldProps = getCameraProps();
-            this.camera.setCameraProps(cameraProps);
-            final var newProps = getCameraProps();
-            if (!Objects.equals(oldProps, newProps)) {
-                this.cameraPropsObservers.fire(newProps);
+        if (getCameraId() != null) {
+            setCameraProps(getCameraId(), cameraProps);
+        }
+    }
+
+    public Calibration getCalibration(Integer cameraId) {
+        return this.calibrationByCameraId.get(cameraId);
+    }
+
+    public Calibration getCalibration() {
+        final var calibration = getCalibration(getCameraId());
+        return calibration != null ? calibration : Calibration.createDefault();
+    }
+
+    public void setCalibration(int cameraId, Calibration calibration) {
+        final var oldCalibration = this.calibrationByCameraId.put(cameraId, calibration);
+        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, calibration)) {
+            if (calibration == null) {
+                calibration = Calibration.createDefault();
+            }
+            if (!Objects.equals(oldCalibration, calibration)) {
+                if (this.spectrum != null) {
+                    setSampleLine(this.spectrum.getSampleLine());
+                }
+                this.calibrationObservers.fire(calibration);
             }
         }
     }
 
     public void setCalibration(@NonNull Calibration calibration) {
-        if (!Objects.equals(this.calibration, calibration)) {
-            this.calibration = calibration;
-            this.calibrationObservers.fire(calibration);
-            if (this.spectrum != null) {
-                setSampleLine(this.spectrum.getSampleLine());
-            }
+        if (getCameraId() != null) {
+            setCalibration(getCameraId(), calibration);
         }
     }
 
     public void setSampleLine(SampleLine sampleLine) {
         if (sampleLine != null) {
-            this.spectrum = Spectrum.create(sampleLine, this.calibration);
+            this.spectrum = Spectrum.create(sampleLine, getCalibration());
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
             this.spectrum = null;
             this.spectrumObservers.fire(null);
+        }
+    }
+
+    public Settings createSettings() {
+        final var settings = new Settings();
+        settings.setSelectedCameraId(getCameraId());
+        for (Entry<Integer, CameraProps> entry : this.cameraPropsByCameraId.entrySet()) {
+            settings.getOrCreateCamera(entry.getKey()).setCameraProps(entry.getValue());
+        }
+        for (Entry<Integer, Calibration> entry : this.calibrationByCameraId.entrySet()) {
+            settings.getOrCreateCamera(entry.getKey()).setCalibration(entry.getValue());
+        }
+
+        return settings;
+    }
+
+    public void applySettings(@NonNull Settings settings) {
+        for (Settings.Camera cameraSettings : settings.getCamerasAsList()) {
+            if (cameraSettings.getCameraProps() != null) {
+                setCameraProps(cameraSettings.getId(), cameraSettings.getCameraProps());
+            }
+            if (cameraSettings.getCalibration() != null) {
+                setCalibration(cameraSettings.getId(), cameraSettings.getCalibration());
+            }
+        }
+
+        if (settings.getSelectedCameraId() != null) {
+            final var newCam = new Camera(settings.getSelectedCameraId()); // NOSONAR: needs to stay open
+            if (newCam.isOpen()) {
+                final var oldCam = getCamera();
+                setCamera(newCam);
+                if (oldCam != null) {
+                    oldCam.close();
+                }
+            }
         }
     }
 }
