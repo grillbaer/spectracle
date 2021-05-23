@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.spectrum.SpectralColors;
 import grillbaer.spectracle.spectrum.Spectrum;
+import grillbaer.spectracle.spectrum.Viewing;
 
 import java.awt.*;
 
@@ -17,7 +17,7 @@ public class SpectrumReproductionView extends SpectralXView {
 
     public void setSpectrum(Spectrum spectrum) {
         this.spectrum = spectrum;
-        setCalibration(spectrum.getCalibration());
+        setCalibration(spectrum.getWaveLengthCalibration());
         repaint();
     }
 
@@ -55,7 +55,7 @@ public class SpectrumReproductionView extends SpectralXView {
             g2.setColor(color);
             g2.fillRect(Math.min(lastX, x), this.viewArea.y + this.viewArea.height / 2, Math.abs(x - lastX), this.viewArea.height / 2);
 
-            final var gray = valueToGray(nanoMeters, value);
+            final var gray = valueToGray(value);
             g2.setColor(gray);
             g2.fillRect(Math.min(lastX, x), this.viewArea.y, Math.abs(x - lastX), this.viewArea.height / 2);
 
@@ -64,7 +64,7 @@ public class SpectrumReproductionView extends SpectralXView {
     }
 
     protected Color valueToColor(double nanoMeters, float value) {
-        final var color = SpectralColors.getColorForWaveLength((float) nanoMeters);
+        final var color = Viewing.colorForWaveLength((float) nanoMeters);
 
         return new Color(
                 (int) (value * color.getRed()),
@@ -72,7 +72,7 @@ public class SpectrumReproductionView extends SpectralXView {
                 (int) (value * color.getBlue()));
     }
 
-    protected Color valueToGray(double nanoMeters, float value) {
+    protected Color valueToGray(float value) {
         return new Color(value, value, value);
     }
 }

@@ -5,11 +5,13 @@ import lombok.Getter;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Locale;
 
-
-public final class SpectralColors {
-
-    private SpectralColors() {
+/**
+ * Helpers for formatting and displaying.
+ */
+public final class Viewing {
+    private Viewing() {
         // no instances
     }
 
@@ -20,7 +22,8 @@ public final class SpectralColors {
     // yellow  565-590 nm   60°
     // orange  590-625 nm   30°
     // red     625-700 nm    0°
-    private static final List<WaveLengthColor> GRADIENT = List.of(
+
+    private static final List<WaveLengthColor> SPECTRUM_GRADIENT = List.of(
             new WaveLengthColor(300f, 300f, 0.2f),
             new WaveLengthColor(380f, 280f, 0.4f),
             new WaveLengthColor(390f, 280f, 0.9f),
@@ -37,26 +40,26 @@ public final class SpectralColors {
             new WaveLengthColor(1200f, 0f, 0.2f)
     );
 
-    public static Color getColorForWaveLength(float nanoMeter) {
-        if (nanoMeter <= GRADIENT.get(0).getNanoMeter()) {
-            final var begin = GRADIENT.get(0);
+    public static Color colorForWaveLength(float nanoMeter) {
+        if (nanoMeter <= SPECTRUM_GRADIENT.get(0).getNanoMeter()) {
+            final var begin = SPECTRUM_GRADIENT.get(0);
             return Color.getHSBColor(begin.getHueDegrees() / 360f, 1f, begin.brightness);
         }
 
-        if (nanoMeter >= GRADIENT.get(GRADIENT.size() - 1).getNanoMeter()) {
-            final var end = GRADIENT.get(GRADIENT.size() - 1);
+        if (nanoMeter >= SPECTRUM_GRADIENT.get(SPECTRUM_GRADIENT.size() - 1).getNanoMeter()) {
+            final var end = SPECTRUM_GRADIENT.get(SPECTRUM_GRADIENT.size() - 1);
             return Color.getHSBColor(end.getHueDegrees() / 360f, 1f, end.brightness);
         }
 
         int beginIndex;
         int endIndex;
-        for (beginIndex = 0, endIndex = 1; endIndex < GRADIENT.size(); beginIndex++, endIndex++) {
-            if (GRADIENT.get(beginIndex).getNanoMeter() <= nanoMeter &&
-                    nanoMeter < GRADIENT.get(endIndex).getNanoMeter()) break;
+        for (beginIndex = 0, endIndex = 1; endIndex < SPECTRUM_GRADIENT.size(); beginIndex++, endIndex++) {
+            if (SPECTRUM_GRADIENT.get(beginIndex).getNanoMeter() <= nanoMeter &&
+                    nanoMeter < SPECTRUM_GRADIENT.get(endIndex).getNanoMeter()) break;
         }
 
-        final var begin = GRADIENT.get(beginIndex);
-        final var end = GRADIENT.get(endIndex);
+        final var begin = SPECTRUM_GRADIENT.get(beginIndex);
+        final var end = SPECTRUM_GRADIENT.get(endIndex);
 
         final var deltaBeginNanoMeter = nanoMeter - begin.getNanoMeter();
         final var deltaNanoMeter = end.getNanoMeter() - begin.getNanoMeter();
@@ -69,9 +72,14 @@ public final class SpectralColors {
         return Color.getHSBColor(hueDegrees / 360f, 1f, brightness);
     }
 
+    public static String formatWaveLength(double nanoMeters) {
+        return String.format(Locale.ROOT, "%.0f", nanoMeters);
+    }
+
     @AllArgsConstructor
     @Getter
     private static final class WaveLengthColor {
+
         private final float nanoMeter;
         private final float hueDegrees;
         private final float brightness;

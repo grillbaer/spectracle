@@ -1,30 +1,30 @@
 package grillbaer.spectracle.settings;
 
-import grillbaer.spectracle.spectrum.Calibration;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class CalibrationTest {
+class WaveLengthCalibrationTest {
 
     @Test
     void indexToRatio() {
-        assertEquals(0.0, Calibration.indexToRatio(400, 0));
-        assertEquals(1.0, Calibration.indexToRatio(400, 399));
+        assertEquals(0.0, WaveLengthCalibration.indexToRatio(400, 0));
+        assertEquals(1.0, WaveLengthCalibration.indexToRatio(400, 399));
     }
 
     @Test
     void ratioToIndex() {
-        assertEquals(0, Calibration.ratioToIndex(400, 0.0));
-        assertEquals(100, Calibration.ratioToIndex(400, 0.25));
-        assertEquals(200, Calibration.ratioToIndex(400, 0.5));
-        assertEquals(299, Calibration.ratioToIndex(400, 0.75));
-        assertEquals(399, Calibration.ratioToIndex(400, 1.0));
+        assertEquals(0, WaveLengthCalibration.ratioToIndex(400, 0.0));
+        assertEquals(100, WaveLengthCalibration.ratioToIndex(400, 0.25));
+        assertEquals(200, WaveLengthCalibration.ratioToIndex(400, 0.5));
+        assertEquals(299, WaveLengthCalibration.ratioToIndex(400, 0.75));
+        assertEquals(399, WaveLengthCalibration.ratioToIndex(400, 1.0));
     }
 
     @Test
     void indexToNanoMetersAtCalPoints() {
-        final var cal = Calibration.createDefault();
+        final var cal = WaveLengthCalibration.createDefault();
         assertEquals(cal.getWaveLengthPoint0().getNanoMeters(),
                 cal.indexToNanoMeters(400, 0));
         assertEquals(cal.getWaveLengthPoint1().getNanoMeters(),
@@ -33,9 +33,9 @@ class CalibrationTest {
 
     @Test
     void indexToNanoMetersInterpolation() {
-        final var cal = Calibration.create(
-                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 100), 400.),
-                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 299), 800.));
+        final var cal = WaveLengthCalibration.create(
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 100), 400.),
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 299), 800.));
         assertEquals(200., cal.indexToNanoMeters(400, 0), 1.5);
         assertEquals(400., cal.indexToNanoMeters(400, 100));
         assertEquals(600., cal.indexToNanoMeters(400, 200), 1.5);
@@ -45,9 +45,9 @@ class CalibrationTest {
 
     @Test
     void nanoMetersToIndex() {
-        final var cal = Calibration.create(
-                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 100), 400.),
-                new Calibration.WaveLengthPoint(Calibration.indexToRatio(400, 299), 800.));
+        final var cal = WaveLengthCalibration.create(
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 100), 400.),
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 299), 800.));
         assertEquals(0, cal.nanoMetersToIndex(400, 200.));
         assertEquals(100, cal.nanoMetersToIndex(400, 400.));
         assertEquals(200, cal.nanoMetersToIndex(400, 600.));

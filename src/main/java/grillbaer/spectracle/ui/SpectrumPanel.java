@@ -1,8 +1,8 @@
 package grillbaer.spectracle.ui;
 
 import grillbaer.spectracle.Context;
-import grillbaer.spectracle.spectrum.NamedWaveLength;
-import grillbaer.spectracle.spectrum.WaveLengths;
+import grillbaer.spectracle.spectrum.KnownSpectrums;
+import grillbaer.spectracle.spectrum.Viewing;
 import grillbaer.spectracle.ui.components.Cursor;
 import grillbaer.spectracle.ui.components.SpectrumGraphView;
 import lombok.NonNull;
@@ -42,9 +42,9 @@ public class SpectrumPanel {
         this.context.getModel().getSpectrumObservers()
                 .add(this.spectrumGraphView::setSpectrum);
 
-        this.commonWaveLengthCursors = NamedWaveLength.COMMON_WAVELENGTHS.stream()
+        this.commonWaveLengthCursors = KnownSpectrums.COMMON_WAVELENGTHS.stream()
                 .map(wl -> new Cursor("common_wl_" + wl.getName(), wl.getNanoMeters(),
-                        () -> WaveLengths.format(wl.getNanoMeters()) + " " + wl.getName(),
+                        () -> Viewing.formatWaveLength(wl.getNanoMeters()) + " " + wl.getName(),
                         new Color(180, 180, 180, 128))).collect(Collectors.toList());
     }
 

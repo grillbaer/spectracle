@@ -1,6 +1,6 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.spectrum.Calibration;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import lombok.NonNull;
 
 import javax.swing.*;
@@ -15,7 +15,7 @@ import java.util.TreeMap;
  * Basic view for spectral data over its X-axis with support for grid, cursors, labels etc.
  */
 public abstract class SpectralXView extends JComponent {
-    protected Calibration calibration;
+    protected WaveLengthCalibration waveLengthCalibration;
     protected Rectangle viewArea;
 
     protected int xAxisHeight;
@@ -31,16 +31,16 @@ public abstract class SpectralXView extends JComponent {
         addMouseMotionListener(mouseHandler);
     }
 
-    public void setCalibration(Calibration calibration) {
-        if (!Objects.equals(this.calibration, calibration)) {
-            this.calibration = calibration;
+    public void setCalibration(WaveLengthCalibration waveLengthCalibration) {
+        if (!Objects.equals(this.waveLengthCalibration, waveLengthCalibration)) {
+            this.waveLengthCalibration = waveLengthCalibration;
             revalidate();
             repaint();
         }
     }
 
-    public Calibration getCalibration() {
-        return this.calibration;
+    public WaveLengthCalibration getCalibration() {
+        return this.waveLengthCalibration;
     }
 
     public void putXCursor(@NonNull Cursor cursor) {
@@ -94,7 +94,7 @@ public abstract class SpectralXView extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (this.calibration != null) {
+        if (this.waveLengthCalibration != null) {
             updateViewArea();
             final var g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
@@ -124,8 +124,8 @@ public abstract class SpectralXView extends JComponent {
     }
 
     protected void drawXGrid(Graphics2D g2, double stepNanoMeters) {
-        double nanoMeters = Math.ceil(this.calibration.getMinNanoMeters() / stepNanoMeters) * stepNanoMeters;
-        while (nanoMeters <= this.calibration.getMaxNanoMeters()) {
+        double nanoMeters = Math.ceil(this.waveLengthCalibration.getMinNanoMeters() / stepNanoMeters) * stepNanoMeters;
+        while (nanoMeters <= this.waveLengthCalibration.getMaxNanoMeters()) {
             final var x = (int) waveLengthToX(nanoMeters);
             g2.drawLine(x, this.viewArea.y, x, this.viewArea.y + this.viewArea.height);
             nanoMeters += stepNanoMeters;
@@ -136,9 +136,9 @@ public abstract class SpectralXView extends JComponent {
         g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         g2.setColor(getForeground());
         final var stepNanoMeters = 50.;
-        double nanoMeters = Math.ceil(this.calibration.getMinNanoMeters() / stepNanoMeters) * stepNanoMeters;
+        double nanoMeters = Math.ceil(this.waveLengthCalibration.getMinNanoMeters() / stepNanoMeters) * stepNanoMeters;
         final var yBaseline = this.viewArea.y + this.viewArea.height + g2.getFontMetrics().getAscent();
-        while (nanoMeters <= this.calibration.getMaxNanoMeters()) {
+        while (nanoMeters <= this.waveLengthCalibration.getMaxNanoMeters()) {
             final var x = (int) waveLengthToX(nanoMeters);
             final var label = String.format("%.0f", nanoMeters);
             final var labelWidth = g2.getFontMetrics().stringWidth(label);
@@ -160,14 +160,16 @@ public abstract class SpectralXView extends JComponent {
     }
 
     protected double waveLengthToX(double nanoMeters) {
-        return viewArea.x + Math.abs(nanoMeters - calibration.getBeginNanoMeters()) / calibration.getNanoMeterRange() * viewArea.width;
+        return viewArea.x + Math.abs(nanoMeters - waveLengthCalibration.getBeginNanoMeters()) / waveLengthCalibration.getNanoMeterRange() * viewArea.width;
     }
 
     protected double xToWaveLength(double x) {
-        if (calibration.getBeginNanoMeters() < calibration.getEndNanoMeters()) {
-            return calibration.getBeginNanoMeters() + (x - viewArea.x) / viewArea.width * calibration.getNanoMeterRange();
+        if (waveLengthCalibration.getBeginNanoMeters() < waveLengthCalibration.getEndNanoMeters()) {
+            return waveLengthCalibration.getBeginNanoMeters() + (x - viewArea.x) / viewArea.width * waveLengthCalibration
+                    .getNanoMeterRange();
         } else {
-            return calibration.getBeginNanoMeters() - (x - viewArea.x) / viewArea.width * calibration.getNanoMeterRange();
+            return waveLengthCalibration.getBeginNanoMeters() - (x - viewArea.x) / viewArea.width * waveLengthCalibration
+                    .getNanoMeterRange();
         }
     }
 

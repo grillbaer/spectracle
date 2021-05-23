@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui;
 
 import grillbaer.spectracle.Context;
-import grillbaer.spectracle.spectrum.Calibration;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
 import grillbaer.spectracle.ui.components.Buttons;
 import grillbaer.spectracle.ui.components.Cursor;
@@ -126,9 +126,9 @@ public class CalibrationPanel {
             final var oldCal = this.context.getModel().getCalibration();
             final double targetRatioA = oldCal.nanoMetersToRatio(cursor0.getValue());
             final double targetRatioB = oldCal.nanoMetersToRatio(cursor1.getValue());
-            final var newCal = Calibration.create(
-                    new Calibration.WaveLengthPoint(targetRatioA, targetWLA.getNanoMeters()),
-                    new Calibration.WaveLengthPoint(targetRatioB, targetWLB.getNanoMeters()));
+            final var newCal = WaveLengthCalibration.create(
+                    new WaveLengthCalibration.WaveLengthPoint(targetRatioA, targetWLA.getNanoMeters()),
+                    new WaveLengthCalibration.WaveLengthPoint(targetRatioB, targetWLB.getNanoMeters()));
             this.context.getModel().setCalibration(newCal);
         }
 

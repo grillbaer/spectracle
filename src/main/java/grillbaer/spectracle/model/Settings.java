@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import grillbaer.spectracle.camera.CameraProps;
-import grillbaer.spectracle.spectrum.Calibration;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -70,7 +70,7 @@ public class Settings {
         @JsonProperty("id")
         private final int id;
         @JsonProperty("calibration")
-        private Calibration calibration;
+        private WaveLengthCalibration waveLengthCalibration;
         @JsonProperty("properties")
         private CameraProps cameraProps;
 

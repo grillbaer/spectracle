@@ -6,6 +6,9 @@ import org.opencv.core.Mat;
 import java.util.Arrays;
 import java.util.function.Function;
 
+/**
+ * Line of sample values, used for the measurement points of a spectrum.
+ */
 public class SampleLine {
     private final float[] values;
 
@@ -25,6 +28,10 @@ public class SampleLine {
         }
         return value;
     };
+
+    public SampleLine(float[] values) {
+        this.values = values;
+    }
 
     public SampleLine(@NonNull Mat mat, int centerRow, int rows, Function<float[], Float> pixelFunction) {
         this.values = new float[mat.cols()];
@@ -49,6 +56,7 @@ public class SampleLine {
             if (values[col] < 0f) values[col] = 0f;
             if (values[col] > 1f) values[col] = 1f;
         }
+
     }
 
     public int getLength() {

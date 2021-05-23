@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.spectrum.SpectralColors;
 import grillbaer.spectracle.spectrum.Spectrum;
+import grillbaer.spectracle.spectrum.Viewing;
 
 import java.awt.*;
 
@@ -17,7 +17,7 @@ public class SpectrumGraphView extends SpectralXView {
 
     public void setSpectrum(Spectrum spectrum) {
         this.spectrum = spectrum;
-        setCalibration(spectrum.getCalibration());
+        setCalibration(spectrum.getWaveLengthCalibration());
         repaint();
     }
 
@@ -68,7 +68,7 @@ public class SpectrumGraphView extends SpectralXView {
             final float value = this.spectrum.getValueAtIndex(i);
             final int x = (int) waveLengthToX(nanoMeters);
             final int y = (int) valueToY(value);
-            final var color = SpectralColors.getColorForWaveLength((float) nanoMeters);
+            final var color = Viewing.colorForWaveLength((float) nanoMeters);
             g2.setColor(color);
             g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
             lastX = x;

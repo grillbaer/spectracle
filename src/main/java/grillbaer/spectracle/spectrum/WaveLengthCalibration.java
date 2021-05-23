@@ -19,26 +19,26 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 @EqualsAndHashCode
 @ToString
 @JsonAutoDetect(fieldVisibility = NONE, getterVisibility = NONE, isGetterVisibility = NONE)
-public final class Calibration {
+public final class WaveLengthCalibration {
     @JsonProperty("waveLengthPoints")
     private final List<WaveLengthPoint> waveLengthPoints = new ArrayList<>();
 
-    private Calibration(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
+    private WaveLengthCalibration(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
         this(List.of(waveLengthPoint0, waveLengthPoint1));
     }
 
-    private Calibration(@JsonProperty("waveLengthPoints") List<WaveLengthPoint> waveLengthPoints) {
+    private WaveLengthCalibration(@JsonProperty("waveLengthPoints") List<WaveLengthPoint> waveLengthPoints) {
         this.waveLengthPoints.addAll(waveLengthPoints);
     }
 
-    public static Calibration createDefault() {
-        return new Calibration(
+    public static WaveLengthCalibration createDefault() {
+        return new WaveLengthCalibration(
                 new WaveLengthPoint(0.15234, 393.),
                 new WaveLengthPoint(0.72656, 656.));
     }
 
-    public static Calibration create(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
-        return new Calibration(waveLengthPoint0, waveLengthPoint1);
+    public static WaveLengthCalibration create(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
+        return new WaveLengthCalibration(waveLengthPoint0, waveLengthPoint1);
     }
 
     public WaveLengthPoint getWaveLengthPoint0() {

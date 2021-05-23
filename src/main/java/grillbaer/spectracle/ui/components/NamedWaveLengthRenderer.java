@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.spectrum.NamedWaveLength;
-import grillbaer.spectracle.spectrum.SpectralColors;
+import grillbaer.spectracle.spectrum.Viewing;
 import lombok.AllArgsConstructor;
 
 import javax.swing.*;
@@ -17,7 +17,7 @@ public class NamedWaveLengthRenderer extends DefaultListCellRenderer {
         final var label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if (value instanceof NamedWaveLength namedWaveLength) {
             label.setText(namedWaveLength.getWaveLengthNameString(false));
-            label.setIcon(new ColorIcon(SpectralColors.getColorForWaveLength((float) namedWaveLength.getNanoMeters())));
+            label.setIcon(new ColorIcon(Viewing.colorForWaveLength((float) namedWaveLength.getNanoMeters())));
         }
 
         return label;

@@ -5,14 +5,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * Spectrum with a sample line over a range of wavelengths.
+ */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public final class Spectrum {
     private final @NonNull SampleLine sampleLine;
-    private final @NonNull Calibration calibration;
+    private final @NonNull WaveLengthCalibration waveLengthCalibration;
 
-    public static Spectrum create(@NonNull SampleLine sampleLine, @NonNull Calibration calibration) {
-        return new Spectrum(sampleLine, calibration);
+    public static Spectrum create(@NonNull SampleLine sampleLine, @NonNull WaveLengthCalibration waveLengthCalibration) {
+        return new Spectrum(sampleLine, waveLengthCalibration);
     }
 
     public int getLength() {
@@ -24,6 +27,6 @@ public final class Spectrum {
     }
 
     public double getNanoMetersAtIndex(int index) {
-        return this.calibration.indexToNanoMeters(this.sampleLine.getLength(), index);
+        return this.waveLengthCalibration.indexToNanoMeters(this.sampleLine.getLength(), index);
     }
 }

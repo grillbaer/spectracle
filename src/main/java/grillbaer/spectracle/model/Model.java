@@ -3,9 +3,9 @@ package grillbaer.spectracle.model;
 import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.camera.Frame;
-import grillbaer.spectracle.spectrum.Calibration;
 import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -39,8 +39,8 @@ public final class Model {
     private final Observers<CameraProps> cameraPropsObservers = new Observers<>();
 
     @Getter(AccessLevel.NONE)
-    private final Map<Integer, Calibration> calibrationByCameraId = new TreeMap<>();
-    private final Observers<Calibration> calibrationObservers = new Observers<>();
+    private final Map<Integer, WaveLengthCalibration> calibrationByCameraId = new TreeMap<>();
+    private final Observers<WaveLengthCalibration> calibrationObservers = new Observers<>();
 
     private Spectrum spectrum;
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
@@ -66,12 +66,13 @@ public final class Model {
     public void setCamera(Camera camera) {
         if (this.camera != camera) {
             this.camera = camera;
-            if (getCameraProps() != null) {
-                this.camera.setCameraProps(getCameraProps());
+            final var cameraProps = getCameraProps();
+            if (cameraProps != null) {
+                this.camera.setCameraProps(cameraProps);
             }
             this.cameraObservers.fire(this.camera);
             this.calibrationObservers.fire(getCalibration());
-            this.cameraPropsObservers.fire(getCameraProps());
+            this.cameraPropsObservers.fire(cameraProps);
             triggerNextFrameIfNotPaused();
         }
     }
@@ -148,33 +149,33 @@ public final class Model {
         }
     }
 
-    public Calibration getCalibration(Integer cameraId) {
+    public WaveLengthCalibration getCalibration(Integer cameraId) {
         return this.calibrationByCameraId.get(cameraId);
     }
 
-    public Calibration getCalibration() {
+    public WaveLengthCalibration getCalibration() {
         final var calibration = getCalibration(getCameraId());
-        return calibration != null ? calibration : Calibration.createDefault();
+        return calibration != null ? calibration : WaveLengthCalibration.createDefault();
     }
 
-    public void setCalibration(int cameraId, Calibration calibration) {
-        final var oldCalibration = this.calibrationByCameraId.put(cameraId, calibration);
-        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, calibration)) {
-            if (calibration == null) {
-                calibration = Calibration.createDefault();
+    public void setCalibration(int cameraId, WaveLengthCalibration waveLengthCalibration) {
+        final var oldCalibration = this.calibrationByCameraId.put(cameraId, waveLengthCalibration);
+        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, waveLengthCalibration)) {
+            if (waveLengthCalibration == null) {
+                waveLengthCalibration = WaveLengthCalibration.createDefault();
             }
-            if (!Objects.equals(oldCalibration, calibration)) {
+            if (!Objects.equals(oldCalibration, waveLengthCalibration)) {
                 if (this.spectrum != null) {
                     setSampleLine(this.spectrum.getSampleLine());
                 }
-                this.calibrationObservers.fire(calibration);
+                this.calibrationObservers.fire(waveLengthCalibration);
             }
         }
     }
 
-    public void setCalibration(@NonNull Calibration calibration) {
+    public void setCalibration(@NonNull WaveLengthCalibration waveLengthCalibration) {
         if (getCameraId() != null) {
-            setCalibration(getCameraId(), calibration);
+            setCalibration(getCameraId(), waveLengthCalibration);
         }
     }
 
@@ -194,8 +195,8 @@ public final class Model {
         for (Entry<Integer, CameraProps> entry : this.cameraPropsByCameraId.entrySet()) {
             settings.getOrCreateCamera(entry.getKey()).setCameraProps(entry.getValue());
         }
-        for (Entry<Integer, Calibration> entry : this.calibrationByCameraId.entrySet()) {
-            settings.getOrCreateCamera(entry.getKey()).setCalibration(entry.getValue());
+        for (Entry<Integer, WaveLengthCalibration> entry : this.calibrationByCameraId.entrySet()) {
+            settings.getOrCreateCamera(entry.getKey()).setWaveLengthCalibration(entry.getValue());
         }
 
         return settings;
@@ -206,8 +207,8 @@ public final class Model {
             if (cameraSettings.getCameraProps() != null) {
                 setCameraProps(cameraSettings.getId(), cameraSettings.getCameraProps());
             }
-            if (cameraSettings.getCalibration() != null) {
-                setCalibration(cameraSettings.getId(), cameraSettings.getCalibration());
+            if (cameraSettings.getWaveLengthCalibration() != null) {
+                setCalibration(cameraSettings.getId(), cameraSettings.getWaveLengthCalibration());
             }
         }
 
