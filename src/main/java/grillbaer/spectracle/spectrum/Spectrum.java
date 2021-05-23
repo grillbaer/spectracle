@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
+import static java.lang.Math.*;
+
 /**
  * Spectrum with a sample line over a range of wavelengths.
  */
@@ -12,7 +14,7 @@ import lombok.NonNull;
 @Getter
 public final class Spectrum {
     private final @NonNull SampleLine sampleLine;
-    private final @NonNull WaveLengthCalibration waveLengthCalibration;
+    private final @NonNull WaveLengthCalibration calibration;
 
     public static Spectrum create(@NonNull SampleLine sampleLine, @NonNull WaveLengthCalibration waveLengthCalibration) {
         return new Spectrum(sampleLine, waveLengthCalibration);
@@ -22,11 +24,29 @@ public final class Spectrum {
         return this.sampleLine.getLength();
     }
 
-    public float getValueAtIndex(int index) {
+    public double getValueAtIndex(int index) {
         return this.sampleLine.getValue(index);
     }
 
     public double getNanoMetersAtIndex(int index) {
-        return this.waveLengthCalibration.indexToNanoMeters(this.sampleLine.getLength(), index);
+        return this.calibration.indexToNanoMeters(this.sampleLine.getLength(), index);
+    }
+
+    /**
+     * Value at wavelength, linearly interpolated between next defined values.
+     * Values are considered constant outside of defined range.
+     */
+    public double getValueAtNanoMeters(double nanoMeters) {
+        final double fractionalIndex = (getLength() - 1) * this.calibration.nanoMetersToRatio(nanoMeters);
+        final int index0 = max(0, (int) floor(fractionalIndex));
+        final int index1 = min(getLength() - 1, (int) ceil(fractionalIndex));
+        if (index0 == index1) {
+            return getValueAtIndex(index0);
+        } else {
+            final double value0 = getValueAtIndex(index0);
+            final double value1 = getValueAtIndex(index1);
+
+            return (value0 * (index1 - fractionalIndex) + value1 * (fractionalIndex - index0));
+        }
     }
 }

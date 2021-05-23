@@ -53,7 +53,7 @@ public final class WaveLengthCalibration {
         return (double) index / (length - 1);
     }
 
-    public static int ratioToIndex(int length, double ratio) {
+    public static int ratioToNextIndex(int length, double ratio) {
         return (int) Math.round(ratio * (length - 1));
     }
 
@@ -63,8 +63,8 @@ public final class WaveLengthCalibration {
                 .getRatio()) / getDeltaRatio());
     }
 
-    public int nanoMetersToIndex(int length, double nanoMeters) {
-        return ratioToIndex(length, nanoMetersToRatio(nanoMeters));
+    public int nanoMetersToNextIndex(int length, double nanoMeters) {
+        return ratioToNextIndex(length, nanoMetersToRatio(nanoMeters));
     }
 
     public double nanoMetersToRatio(double nanoMeters) {

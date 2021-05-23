@@ -45,8 +45,8 @@ public class KnownSpectrums {
                 WaveLengthCalibration.create(
                         new WaveLengthCalibration.WaveLengthPoint(0.0, beginNanoMeters),
                         new WaveLengthCalibration.WaveLengthPoint(1.0, endNanoMeters));
-        final var values = new float[length];
-        float maxValue = 0f;
+        final var values = new double[length];
+        double maxValue = 0f;
         for (int i = 0; i < length; i++) {
             values[i] = (float) plancksRadiationLaw(temperatureKelvin, calibration.indexToNanoMeters(length, i) * 1e-9);
             if (values[i] > maxValue)

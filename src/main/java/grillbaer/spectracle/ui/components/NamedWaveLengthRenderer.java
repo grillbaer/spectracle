@@ -17,7 +17,7 @@ public class NamedWaveLengthRenderer extends DefaultListCellRenderer {
         final var label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if (value instanceof NamedWaveLength namedWaveLength) {
             label.setText(namedWaveLength.getWaveLengthNameString(false));
-            label.setIcon(new ColorIcon(Viewing.colorForWaveLength((float) namedWaveLength.getNanoMeters())));
+            label.setIcon(new ColorIcon(Viewing.colorForWaveLength(namedWaveLength.getNanoMeters())));
         }
 
         return label;

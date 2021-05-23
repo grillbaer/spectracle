@@ -17,7 +17,7 @@ public class CameraPanel {
     private final SpectrumReproductionView spectrumReproductionView;
     private final CameraView cameraView;
 
-    private final int exposureRes = 1;
+    private static final int EXPOSURE_RESOLUTION = 1;
     private final JButton exposureMinusButton;
     private final JSlider exposureSlider;
     private final JButton exposurePlusButton;
@@ -42,7 +42,7 @@ public class CameraPanel {
         this.spectrumReproductionView.setSpectrum(this.context.getModel().getSpectrum());
         this.context.getModel().getSpectrumObservers().add(this.spectrumReproductionView::setSpectrum);
 
-        this.exposureSlider = new JSlider(SwingConstants.HORIZONTAL, -15 * this.exposureRes, 10 * this.exposureRes, 0);
+        this.exposureSlider = new JSlider(SwingConstants.HORIZONTAL, -15 * EXPOSURE_RESOLUTION, 10 * EXPOSURE_RESOLUTION, 0);
         this.exposureSlider.addChangeListener(e -> panelToCameraProps());
         this.exposureMinusButton = new JButton("🔅");
         this.exposureMinusButton.addActionListener(e -> this.exposureSlider.setValue(this.exposureSlider.getValue() - 1));
@@ -96,7 +96,7 @@ public class CameraPanel {
     private void cameraPropsToPanel(CameraProps props) {
         this.exposureSlider.setEnabled(props != null);
         if (props != null) {
-            this.exposureSlider.setValue((int) Math.round(props.getExposure() * this.exposureRes));
+            this.exposureSlider.setValue((int) Math.round(props.getExposure() * EXPOSURE_RESOLUTION));
         }
     }
 
@@ -104,7 +104,7 @@ public class CameraPanel {
         final var oldProps = this.context.getModel().getCameraProps();
         if (oldProps != null) {
             this.context.getModel().setCameraProps(
-                    oldProps.withExposure((double) this.exposureSlider.getValue() / this.exposureRes));
+                    oldProps.withExposure((double) this.exposureSlider.getValue() / EXPOSURE_RESOLUTION));
         }
     }
 

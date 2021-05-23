@@ -17,7 +17,7 @@ public class SpectrumGraphView extends SpectralXView {
 
     public void setSpectrum(Spectrum spectrum) {
         this.spectrum = spectrum;
-        setCalibration(spectrum.getWaveLengthCalibration());
+        setCalibration(spectrum.getCalibration());
         repaint();
     }
 
@@ -65,10 +65,10 @@ public class SpectrumGraphView extends SpectralXView {
         int lastX = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
-            final float value = this.spectrum.getValueAtIndex(i);
+            final double value = this.spectrum.getValueAtIndex(i);
             final int x = (int) waveLengthToX(nanoMeters);
             final int y = (int) valueToY(value);
-            final var color = Viewing.colorForWaveLength((float) nanoMeters);
+            final var color = Viewing.colorForWaveLength(nanoMeters);
             g2.setColor(color);
             g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
             lastX = x;

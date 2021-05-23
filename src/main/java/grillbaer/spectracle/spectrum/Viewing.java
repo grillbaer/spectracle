@@ -24,23 +24,23 @@ public final class Viewing {
     // red     625-700 nm    0°
 
     private static final List<WaveLengthColor> SPECTRUM_GRADIENT = List.of(
-            new WaveLengthColor(300f, 300f, 0.2f),
-            new WaveLengthColor(380f, 280f, 0.4f),
-            new WaveLengthColor(390f, 280f, 0.9f),
-            new WaveLengthColor(415f, 270f, 1f),
-            new WaveLengthColor(468f, 240f, 1f),
-            new WaveLengthColor(492f, 180f, 1f),
-            new WaveLengthColor(532f, 120f, 1f),
-            new WaveLengthColor(577f, 60f, 1f),
-            new WaveLengthColor(607f, 30f, 1f),
-            new WaveLengthColor(657f, 0f, 1f),
-            new WaveLengthColor(690f, -10f, 0.9f),
-            new WaveLengthColor(700f, -10f, 0.7f),
-            new WaveLengthColor(750f, -10f, 0.4f),
-            new WaveLengthColor(1200f, 0f, 0.2f)
+            new WaveLengthColor(300., 300f, 0.2f),
+            new WaveLengthColor(380., 280f, 0.4f),
+            new WaveLengthColor(390., 280f, 0.9f),
+            new WaveLengthColor(415., 270f, 1f),
+            new WaveLengthColor(468., 240f, 1f),
+            new WaveLengthColor(492., 180f, 1f),
+            new WaveLengthColor(532., 120f, 1f),
+            new WaveLengthColor(577., 60f, 1f),
+            new WaveLengthColor(607., 30f, 1f),
+            new WaveLengthColor(657., 0f, 1f),
+            new WaveLengthColor(690., -10f, 0.9f),
+            new WaveLengthColor(700., -10f, 0.7f),
+            new WaveLengthColor(750., -10f, 0.4f),
+            new WaveLengthColor(1200., 0f, 0.2f)
     );
 
-    public static Color colorForWaveLength(float nanoMeter) {
+    public static Color colorForWaveLength(double nanoMeter) {
         if (nanoMeter <= SPECTRUM_GRADIENT.get(0).getNanoMeter()) {
             final var begin = SPECTRUM_GRADIENT.get(0);
             return Color.getHSBColor(begin.getHueDegrees() / 360f, 1f, begin.brightness);
@@ -66,8 +66,8 @@ public final class Viewing {
         final var deltaHueDegrees = end.getHueDegrees() - begin.getHueDegrees();
         final var deltaBrightness = end.getBrightness() - begin.getBrightness();
 
-        final float hueDegrees = begin.getHueDegrees() + deltaBeginNanoMeter / deltaNanoMeter * deltaHueDegrees;
-        final float brightness = begin.getBrightness() + deltaBeginNanoMeter / deltaNanoMeter * deltaBrightness;
+        final float hueDegrees = (float) (begin.getHueDegrees() + deltaBeginNanoMeter / deltaNanoMeter * deltaHueDegrees);
+        final float brightness = (float) (begin.getBrightness() + deltaBeginNanoMeter / deltaNanoMeter * deltaBrightness);
 
         return Color.getHSBColor(hueDegrees / 360f, 1f, brightness);
     }
@@ -79,8 +79,7 @@ public final class Viewing {
     @AllArgsConstructor
     @Getter
     private static final class WaveLengthColor {
-
-        private final float nanoMeter;
+        private final double nanoMeter;
         private final float hueDegrees;
         private final float brightness;
     }

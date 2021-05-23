@@ -15,20 +15,20 @@ class WaveLengthCalibrationTest {
 
     @Test
     void ratioToIndex() {
-        assertEquals(0, WaveLengthCalibration.ratioToIndex(400, 0.0));
-        assertEquals(100, WaveLengthCalibration.ratioToIndex(400, 0.25));
-        assertEquals(200, WaveLengthCalibration.ratioToIndex(400, 0.5));
-        assertEquals(299, WaveLengthCalibration.ratioToIndex(400, 0.75));
-        assertEquals(399, WaveLengthCalibration.ratioToIndex(400, 1.0));
+        assertEquals(0, WaveLengthCalibration.ratioToNextIndex(400, 0.0));
+        assertEquals(100, WaveLengthCalibration.ratioToNextIndex(400, 0.25));
+        assertEquals(200, WaveLengthCalibration.ratioToNextIndex(400, 0.5));
+        assertEquals(299, WaveLengthCalibration.ratioToNextIndex(400, 0.75));
+        assertEquals(399, WaveLengthCalibration.ratioToNextIndex(400, 1.0));
     }
 
     @Test
     void indexToNanoMetersAtCalPoints() {
-        final var cal = WaveLengthCalibration.createDefault();
-        assertEquals(cal.getWaveLengthPoint0().getNanoMeters(),
-                cal.indexToNanoMeters(400, 0));
-        assertEquals(cal.getWaveLengthPoint1().getNanoMeters(),
-                cal.indexToNanoMeters(400, 399));
+        final var cal = WaveLengthCalibration.create(
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 100), 400.),
+                new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 333), 800.));
+        assertEquals(400., cal.indexToNanoMeters(400, 100));
+        assertEquals(800., cal.indexToNanoMeters(400, 333));
     }
 
     @Test
@@ -48,10 +48,10 @@ class WaveLengthCalibrationTest {
         final var cal = WaveLengthCalibration.create(
                 new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 100), 400.),
                 new WaveLengthCalibration.WaveLengthPoint(WaveLengthCalibration.indexToRatio(400, 299), 800.));
-        assertEquals(0, cal.nanoMetersToIndex(400, 200.));
-        assertEquals(100, cal.nanoMetersToIndex(400, 400.));
-        assertEquals(200, cal.nanoMetersToIndex(400, 600.));
-        assertEquals(299, cal.nanoMetersToIndex(400, 800.));
-        assertEquals(399, cal.nanoMetersToIndex(400, 1000.));
+        assertEquals(0, cal.nanoMetersToNextIndex(400, 200.));
+        assertEquals(100, cal.nanoMetersToNextIndex(400, 400.));
+        assertEquals(200, cal.nanoMetersToNextIndex(400, 600.));
+        assertEquals(299, cal.nanoMetersToNextIndex(400, 800.));
+        assertEquals(399, cal.nanoMetersToNextIndex(400, 1000.));
     }
 }

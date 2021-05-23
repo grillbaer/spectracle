@@ -4,39 +4,39 @@ import lombok.NonNull;
 import org.opencv.core.Mat;
 
 import java.util.Arrays;
-import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Line of sample values, used for the measurement points of a spectrum.
  */
 public class SampleLine {
-    private final float[] values;
+    private final double[] values;
 
-    public static final Function<float[], Float> PIXEL_CHANNEL_AVERAGE = pixel -> {
-        float value = 0f;
-        for (float channel : pixel) {
+    public static final ToDoubleFunction<double[]> PIXEL_CHANNEL_AVERAGE = pixel -> {
+        double value = 0.;
+        for (double channel : pixel) {
             value += channel;
         }
         return value / pixel.length;
     };
 
-    public static final Function<float[], Float> PIXEL_CHANNEL_MAX = pixel -> {
-        float value = 0f;
-        for (float channel : pixel) {
+    public static final ToDoubleFunction<double[]> PIXEL_CHANNEL_MAX = pixel -> {
+        double value = 0.;
+        for (double channel : pixel) {
             if (value < channel)
                 value = channel;
         }
         return value;
     };
 
-    public SampleLine(float[] values) {
+    public SampleLine(double[] values) {
         this.values = values;
     }
 
-    public SampleLine(@NonNull Mat mat, int centerRow, int rows, Function<float[], Float> pixelFunction) {
-        this.values = new float[mat.cols()];
+    public SampleLine(@NonNull Mat mat, int centerRow, int rows, ToDoubleFunction<double[]> pixelToValueFunction) {
+        this.values = new double[mat.cols()];
         final var rawPixel = new byte[mat.channels()];
-        final var normPixel = new float[mat.channels()];
+        final var normPixel = new double[mat.channels()];
 
         for (var col = 0; col < mat.cols(); col++) {
 
@@ -48,11 +48,11 @@ public class SampleLine {
 
                 mat.get(row, col, rawPixel);
                 for (int i = 0; i < rawPixel.length; i++) {
-                    normPixel[i] += (((int) rawPixel[i]) & 0xff) / 255f / rows;
+                    normPixel[i] += (((int) rawPixel[i]) & 0xff) / 255. / rows;
                 }
             }
 
-            values[col] = pixelFunction.apply(normPixel);
+            values[col] = pixelToValueFunction.applyAsDouble(normPixel);
             if (values[col] < 0f) values[col] = 0f;
             if (values[col] > 1f) values[col] = 1f;
         }
@@ -63,7 +63,7 @@ public class SampleLine {
         return this.values.length;
     }
 
-    public float getValue(int index) {
+    public double getValue(int index) {
         return this.values[index];
     }
 }

@@ -17,7 +17,7 @@ public class SpectrumReproductionView extends SpectralXView {
 
     public void setSpectrum(Spectrum spectrum) {
         this.spectrum = spectrum;
-        setCalibration(spectrum.getWaveLengthCalibration());
+        setCalibration(spectrum.getCalibration());
         repaint();
     }
 
@@ -48,7 +48,7 @@ public class SpectrumReproductionView extends SpectralXView {
         int lastX = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
-            final float value = this.spectrum.getValueAtIndex(i);
+            final double value = this.spectrum.getValueAtIndex(i);
             final int x = (int) waveLengthToX(nanoMeters);
 
             final var color = valueToColor(nanoMeters, value);
@@ -63,8 +63,8 @@ public class SpectrumReproductionView extends SpectralXView {
         }
     }
 
-    protected Color valueToColor(double nanoMeters, float value) {
-        final var color = Viewing.colorForWaveLength((float) nanoMeters);
+    protected Color valueToColor(double nanoMeters, double value) {
+        final var color = Viewing.colorForWaveLength(nanoMeters);
 
         return new Color(
                 (int) (value * color.getRed()),
@@ -72,7 +72,7 @@ public class SpectrumReproductionView extends SpectralXView {
                 (int) (value * color.getBlue()));
     }
 
-    protected Color valueToGray(float value) {
-        return new Color(value, value, value);
+    protected Color valueToGray(double value) {
+        return new Color((float) value, (float) value, (float) value);
     }
 }
