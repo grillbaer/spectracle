@@ -21,7 +21,7 @@ public final class SpectralColors {
     // orange  590-625 nm   30°
     // red     625-700 nm    0°
     private static final List<WaveLengthColor> GRADIENT = List.of(
-            new WaveLengthColor(300f, 300f, 0.1f),
+            new WaveLengthColor(300f, 300f, 0.2f),
             new WaveLengthColor(380f, 280f, 0.4f),
             new WaveLengthColor(390f, 280f, 0.9f),
             new WaveLengthColor(415f, 270f, 1f),
@@ -32,8 +32,9 @@ public final class SpectralColors {
             new WaveLengthColor(607f, 30f, 1f),
             new WaveLengthColor(657f, 0f, 1f),
             new WaveLengthColor(690f, -10f, 0.9f),
-            new WaveLengthColor(700f, -10f, 0.4f),
-            new WaveLengthColor(1200f, 0f, 0.1f)
+            new WaveLengthColor(700f, -10f, 0.7f),
+            new WaveLengthColor(750f, -10f, 0.4f),
+            new WaveLengthColor(1200f, 0f, 0.2f)
     );
 
     public static Color getColorForWaveLength(float nanoMeter) {
