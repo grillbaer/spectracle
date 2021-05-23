@@ -3,6 +3,7 @@ package grillbaer.spectracle.spectrum;
 import lombok.NonNull;
 import org.opencv.core.Mat;
 
+import java.util.Arrays;
 import java.util.function.Function;
 
 public class SampleLine {
@@ -30,23 +31,21 @@ public class SampleLine {
         final var rawPixel = new byte[mat.channels()];
         final var normPixel = new float[mat.channels()];
 
-        for (var rowOffset = 0; rowOffset < rows; rowOffset++) {
+        for (var col = 0; col < mat.cols(); col++) {
 
-            final var row = centerRow - rows / 2 + rowOffset;
-            if (row < 0 || row >= mat.rows())
-                continue;
-
-            for (var col = 0; col < mat.cols(); col++) {
+            Arrays.fill(normPixel, 0f);
+            for (var rowOffset = 0; rowOffset < rows; rowOffset++) {
+                final var row = centerRow - rows / 2 + rowOffset;
+                if (row < 0 || row >= mat.rows())
+                    continue;
 
                 mat.get(row, col, rawPixel);
                 for (int i = 0; i < rawPixel.length; i++) {
-                    normPixel[i] = (((int) rawPixel[i]) & 0xff) / 256f;
+                    normPixel[i] += (((int) rawPixel[i]) & 0xff) / 255f / rows;
                 }
-
-                var value = pixelFunction.apply(normPixel);
-
-                values[col] += value / rows;
             }
+
+            values[col] = pixelFunction.apply(normPixel);
         }
     }
 
