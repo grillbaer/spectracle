@@ -13,7 +13,7 @@ import java.util.List;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 
 /**
- * Calibration mapping between a range from 0.0 to 1.0 and to spectral wavelengths.
+ * Calibration mapping between a range from 0.0 to 1.0 and spectral wavelengths.
  * Immutable.
  */
 @EqualsAndHashCode

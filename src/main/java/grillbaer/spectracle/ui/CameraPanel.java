@@ -4,6 +4,7 @@ import grillbaer.spectracle.Context;
 import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.ui.components.CameraView;
+import grillbaer.spectracle.ui.components.SpectrumReproductionView;
 import lombok.NonNull;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ public class CameraPanel {
     private final Context context;
 
     private final JPanel panel;
+    private final SpectrumReproductionView spectrumReproductionView;
     private final CameraView cameraView;
 
     private final int exposureRes = 1;
@@ -35,6 +37,11 @@ public class CameraPanel {
         this.cameraView.setFrame(this.context.getModel().getCurrentFrame());
         this.context.getModel().getFrameGrabbedObservers().add(this.cameraView::setFrame);
 
+        this.spectrumReproductionView = new SpectrumReproductionView();
+        this.spectrumReproductionView.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+        this.spectrumReproductionView.setSpectrum(this.context.getModel().getSpectrum());
+        this.context.getModel().getSpectrumObservers().add(this.spectrumReproductionView::setSpectrum);
+
         this.exposureSlider = new JSlider(SwingConstants.HORIZONTAL, -15 * this.exposureRes, 10 * this.exposureRes, 0);
         this.exposureSlider.addChangeListener(e -> panelToCameraProps());
         this.exposureMinusButton = new JButton("🔅");
@@ -56,6 +63,7 @@ public class CameraPanel {
         controlPanel.add(this.playPauseButton);
 
         this.panel = new JPanel(new BorderLayout());
+        this.panel.add(this.spectrumReproductionView, BorderLayout.NORTH);
         this.panel.add(this.cameraView, BorderLayout.CENTER);
         this.panel.add(controlPanel, BorderLayout.SOUTH);
 

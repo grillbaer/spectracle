@@ -46,6 +46,8 @@ public class SampleLine {
             }
 
             values[col] = pixelFunction.apply(normPixel);
+            if (values[col] < 0f) values[col] = 0f;
+            if (values[col] > 1f) values[col] = 1f;
         }
     }
 

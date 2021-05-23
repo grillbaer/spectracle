@@ -6,7 +6,7 @@ import grillbaer.spectracle.spectrum.Spectrum;
 import java.awt.*;
 
 /**
- * Spectrum graph view.
+ * Spectrum visualization is XY graph.
  */
 public class SpectrumGraphView extends SpectralXView {
     private Spectrum spectrum;
