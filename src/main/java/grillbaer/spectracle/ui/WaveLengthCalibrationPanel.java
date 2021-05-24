@@ -1,8 +1,8 @@
 package grillbaer.spectracle.ui;
 
 import grillbaer.spectracle.Context;
-import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import grillbaer.spectracle.ui.components.Buttons;
 import grillbaer.spectracle.ui.components.Cursor;
 import grillbaer.spectracle.ui.components.SpectrumGraphView;
@@ -12,7 +12,7 @@ import lombok.NonNull;
 import javax.swing.*;
 import java.awt.*;
 
-public class CalibrationPanel {
+public class WaveLengthCalibrationPanel {
     public static final Color CAL_0_COLOR = new Color(255, 100, 255);
     public static final Color CAL_1_COLOR = new Color(90, 220, 90);
 
@@ -33,12 +33,12 @@ public class CalibrationPanel {
 
     private boolean active;
 
-    public CalibrationPanel(@NonNull Context context, @NonNull SpectrumGraphView spectrumGraphView) {
+    public WaveLengthCalibrationPanel(@NonNull Context context, @NonNull SpectrumGraphView spectrumGraphView) {
         this.context = context;
         this.spectrumGraphView = spectrumGraphView;
 
         final var triangularRuler = "\uD83D\uDCD0";
-        this.calibrateButton = new JButton(triangularRuler + " Calibrate");
+        this.calibrateButton = new JButton(triangularRuler + " Calibrate λ");
         this.calibrateButton.addActionListener(e -> beginCalibration());
 
         this.cal0WaveLengthSelector = new WaveLengthSelector("λ₀=", CAL_0_COLOR);
@@ -101,7 +101,7 @@ public class CalibrationPanel {
     private void beginCalibration() {
         this.active = true;
 
-        final var calibration = this.context.getModel().getCalibration();
+        final var calibration = this.context.getModel().getWaveLengthCalibration();
         final var waveLengthA = calibration.getWaveLengthPoint0().getNanoMeters();
         final var waveLengthB = calibration.getWaveLengthPoint1().getNanoMeters();
         this.cursor0.setValue(waveLengthA);
@@ -123,13 +123,13 @@ public class CalibrationPanel {
         final NamedWaveLength targetWLA = this.cal0WaveLengthSelector.getValidWaveLength();
         final NamedWaveLength targetWLB = this.cal1WaveLengthSelector.getValidWaveLength();
         if (targetWLA != null && targetWLB != null) {
-            final var oldCal = this.context.getModel().getCalibration();
+            final var oldCal = this.context.getModel().getWaveLengthCalibration();
             final double targetRatioA = oldCal.nanoMetersToRatio(cursor0.getValue());
             final double targetRatioB = oldCal.nanoMetersToRatio(cursor1.getValue());
             final var newCal = WaveLengthCalibration.create(
                     new WaveLengthCalibration.WaveLengthPoint(targetRatioA, targetWLA.getNanoMeters()),
                     new WaveLengthCalibration.WaveLengthPoint(targetRatioB, targetWLB.getNanoMeters()));
-            this.context.getModel().setCalibration(newCal);
+            this.context.getModel().setWaveLengthCalibration(newCal);
         }
 
         updateForCalibration();

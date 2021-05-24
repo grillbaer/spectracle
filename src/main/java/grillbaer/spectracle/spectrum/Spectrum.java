@@ -8,7 +8,8 @@ import lombok.NonNull;
 import static java.lang.Math.*;
 
 /**
- * Spectrum with a sample line over a range of wavelengths.
+ * Spectrum with a sample line of values over a range of wavelengths.
+ * Usually, the values are spectral intensities, but for sensitivity corrections they are spectral correction factors.
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter

@@ -27,8 +27,17 @@ public final class Buttons {
     public static JButton createCancelButton() {
         final var button = new JButton("❌", null);
         button.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
-        button.setForeground(Color.RED.darker());
+        //button.setForeground(Color.GRAY);
 
         return button;
     }
+
+    public static JButton createResetButton() {
+        final var button = new JButton("⭯", null);
+        button.setFont(new Font(Font.DIALOG, Font.BOLD, 16));
+        button.setForeground(Color.RED);
+
+        return button;
+    }
+
 }

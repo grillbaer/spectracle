@@ -3,9 +3,11 @@ package grillbaer.spectracle.model;
 import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.camera.Frame;
+import grillbaer.spectracle.model.Settings.SensitivityCalibration;
 import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -39,9 +41,13 @@ public final class Model {
     private final Observers<CameraProps> cameraPropsObservers = new Observers<>();
 
     @Getter(AccessLevel.NONE)
-    private final Map<Integer, WaveLengthCalibration> calibrationByCameraId = new TreeMap<>();
-    private final Observers<WaveLengthCalibration> calibrationObservers = new Observers<>();
+    private final Map<Integer, WaveLengthCalibration> waveLengthCalibrationByCameraId = new TreeMap<>();
+    private final Observers<WaveLengthCalibration> waveLengthCalibrationObservers = new Observers<>();
 
+    @Getter(AccessLevel.NONE)
+    private final Map<Integer, Spectrum> sensitivityCalibrationByCameraId = new TreeMap<>();
+
+    private Spectrum rawSpectrum;
     private Spectrum spectrum;
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
     private double sampleRowPosRatio = 0.5;
@@ -71,7 +77,7 @@ public final class Model {
                 this.camera.setCameraProps(cameraProps);
             }
             this.cameraObservers.fire(this.camera);
-            this.calibrationObservers.fire(getCalibration());
+            this.waveLengthCalibrationObservers.fire(getWaveLengthCalibration());
             this.cameraPropsObservers.fire(cameraProps);
             triggerNextFrameIfNotPaused();
         }
@@ -149,17 +155,17 @@ public final class Model {
         }
     }
 
-    public WaveLengthCalibration getCalibration(Integer cameraId) {
-        return this.calibrationByCameraId.get(cameraId);
+    public WaveLengthCalibration getWaveLengthCalibration(Integer cameraId) {
+        return this.waveLengthCalibrationByCameraId.get(cameraId);
     }
 
-    public WaveLengthCalibration getCalibration() {
-        final var calibration = getCalibration(getCameraId());
+    public WaveLengthCalibration getWaveLengthCalibration() {
+        final var calibration = getWaveLengthCalibration(getCameraId());
         return calibration != null ? calibration : WaveLengthCalibration.createDefault();
     }
 
-    public void setCalibration(int cameraId, WaveLengthCalibration waveLengthCalibration) {
-        final var oldCalibration = this.calibrationByCameraId.put(cameraId, waveLengthCalibration);
+    public void setWaveLengthCalibration(int cameraId, WaveLengthCalibration waveLengthCalibration) {
+        final var oldCalibration = this.waveLengthCalibrationByCameraId.put(cameraId, waveLengthCalibration);
         if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, waveLengthCalibration)) {
             if (waveLengthCalibration == null) {
                 waveLengthCalibration = WaveLengthCalibration.createDefault();
@@ -168,24 +174,101 @@ public final class Model {
                 if (this.spectrum != null) {
                     setSampleLine(this.spectrum.getSampleLine());
                 }
-                this.calibrationObservers.fire(waveLengthCalibration);
+                this.waveLengthCalibrationObservers.fire(waveLengthCalibration);
             }
         }
     }
 
-    public void setCalibration(@NonNull WaveLengthCalibration waveLengthCalibration) {
+    public void setWaveLengthCalibration(@NonNull WaveLengthCalibration waveLengthCalibration) {
         if (getCameraId() != null) {
-            setCalibration(getCameraId(), waveLengthCalibration);
+            setWaveLengthCalibration(getCameraId(), waveLengthCalibration);
+        }
+    }
+
+
+    public Spectrum getSensitivityCalibration(Integer cameraId) {
+        return this.sensitivityCalibrationByCameraId.get(cameraId);
+    }
+
+    public Spectrum getSensitivityCalibration() {
+        return getSensitivityCalibration(getCameraId());
+    }
+
+
+    public void setSensitivityCalibration(int cameraId, Spectrum sensitivityCalibration) {
+        final Spectrum oldCalibration;
+        if (sensitivityCalibration != null) {
+            oldCalibration = this.sensitivityCalibrationByCameraId.put(cameraId, sensitivityCalibration);
+        } else {
+            oldCalibration = this.sensitivityCalibrationByCameraId.remove(cameraId);
+        }
+
+        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, sensitivityCalibration)) {
+            if (this.rawSpectrum != null) {
+                setSampleLine(this.rawSpectrum.getSampleLine());
+            }
+        }
+    }
+
+    private void setSensitivityCalibration(Spectrum sensitivityCalibration) {
+        if (getCameraId() != null) {
+            setSensitivityCalibration(getCameraId(), sensitivityCalibration);
         }
     }
 
     public void setSampleLine(SampleLine sampleLine) {
         if (sampleLine != null) {
-            this.spectrum = Spectrum.create(sampleLine, getCalibration());
+            this.rawSpectrum = Spectrum.create(sampleLine, getWaveLengthCalibration());
+            this.spectrum = calcSensitivityCorrectedSpectrum(this.rawSpectrum);
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
+            this.rawSpectrum = null;
             this.spectrum = null;
             this.spectrumObservers.fire(null);
+        }
+    }
+
+    private Spectrum calcSensitivityCorrectedSpectrum(@NonNull Spectrum rawSpectrum) {
+        final var sensitivityCalibration = getSensitivityCalibration();
+        if (sensitivityCalibration == null)
+            return rawSpectrum;
+
+        final var corrected = new double[rawSpectrum.getLength()];
+        for (int i = 0; i < corrected.length; i++) {
+            final var nanoMeters = rawSpectrum.getNanoMetersAtIndex(i);
+            corrected[i] = rawSpectrum.getValueAtIndex(i) * sensitivityCalibration.getValueAtNanoMeters(nanoMeters);
+        }
+
+        return Spectrum.create(new SampleLine(corrected), rawSpectrum.getCalibration());
+    }
+
+    /**
+     * Calculate and set a new sensitivity correction spectrum by comparing the current (uncorrected)
+     * spectrum obtained from the camera with the passed reference light source's idealized spectrum.
+     */
+    public void calibrateSensitivityWithReferenceLight(@NonNull Spectrum referenceLightSpectrum) {
+        if (this.rawSpectrum != null) {
+            final var correctionFactors = new double[this.rawSpectrum.getLength()];
+            double maxCorrectionFactor = 0.;
+            for (int i = 0; i < this.rawSpectrum.getLength(); i++) {
+                final var nanoMeters = this.rawSpectrum.getNanoMetersAtIndex(i);
+                final var rawValue = this.rawSpectrum.getValueAtIndex(i);
+                final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
+                correctionFactors[i] = targetValue / rawValue;
+                if (maxCorrectionFactor < correctionFactors[i]) {
+                    maxCorrectionFactor = correctionFactors[i];
+                }
+            }
+
+            for (int i = 0; i < correctionFactors.length; i++) {
+                correctionFactors[i] /= maxCorrectionFactor;
+            }
+
+            //TODO: smoothen correction factor spectrum!
+
+            final var sensitivityCalibration =
+                    Spectrum.create(new SampleLine(correctionFactors), this.rawSpectrum.getCalibration());
+            setSensitivityCalibration(sensitivityCalibration);
         }
     }
 
@@ -195,8 +278,15 @@ public final class Model {
         for (Entry<Integer, CameraProps> entry : this.cameraPropsByCameraId.entrySet()) {
             settings.getOrCreateCamera(entry.getKey()).setCameraProps(entry.getValue());
         }
-        for (Entry<Integer, WaveLengthCalibration> entry : this.calibrationByCameraId.entrySet()) {
+        for (Entry<Integer, WaveLengthCalibration> entry : this.waveLengthCalibrationByCameraId.entrySet()) {
             settings.getOrCreateCamera(entry.getKey()).setWaveLengthCalibration(entry.getValue());
+        }
+        for (Entry<Integer, Spectrum> entry : this.sensitivityCalibrationByCameraId.entrySet()) {
+            final var correctionFactors = entry.getValue();
+            settings.getOrCreateCamera(entry.getKey()).setSensitivityCalibration(
+                    new SensitivityCalibration(correctionFactors.getCalibration().getBeginNanoMeters(),
+                            correctionFactors.getCalibration().getEndNanoMeters(),
+                            correctionFactors.getSampleLine().getValues()));
         }
 
         return settings;
@@ -208,7 +298,17 @@ public final class Model {
                 setCameraProps(cameraSettings.getId(), cameraSettings.getCameraProps());
             }
             if (cameraSettings.getWaveLengthCalibration() != null) {
-                setCalibration(cameraSettings.getId(), cameraSettings.getWaveLengthCalibration());
+                setWaveLengthCalibration(cameraSettings.getId(), cameraSettings.getWaveLengthCalibration());
+            }
+            if (cameraSettings.getSensitivityCalibration() != null) {
+                final var sensCal = cameraSettings.getSensitivityCalibration();
+                final var corrFactors = sensCal.getCorrectionFactors();
+                final var wlCal =
+                        WaveLengthCalibration.create(
+                                new WaveLengthPoint(0.0, sensCal.getBeginNanoMeters()),
+                                new WaveLengthPoint(1.0, sensCal.getEndNanoMeters()));
+                setSensitivityCalibration(cameraSettings.getId(),
+                        Spectrum.create(new SampleLine(corrFactors), wlCal));
             }
         }
 

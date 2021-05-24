@@ -66,4 +66,8 @@ public class SampleLine {
     public double getValue(int index) {
         return this.values[index];
     }
+
+    public double[] getValues() {
+        return Arrays.copyOf(this.values, this.values.length);
+    }
 }

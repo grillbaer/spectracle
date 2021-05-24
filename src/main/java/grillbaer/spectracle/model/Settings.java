@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,13 +66,30 @@ public class Settings {
     public static class Camera {
         @JsonProperty("id")
         private final int id;
-        @JsonProperty("calibration")
+        @JsonProperty("waveLengthCalibration")
         private WaveLengthCalibration waveLengthCalibration;
         @JsonProperty("properties")
         private CameraProps cameraProps;
+        @JsonProperty("sensitivityCalibration")
+        private SensitivityCalibration sensitivityCalibration;
 
         public Camera(@JsonProperty("id") int id) {
             this.id = id;
         }
+    }
+
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    @JsonAutoDetect(fieldVisibility = NONE, getterVisibility = NONE, isGetterVisibility = NONE)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class SensitivityCalibration {
+        @JsonProperty("beginNanoMeters")
+        private double beginNanoMeters;
+        @JsonProperty("endNanoMeters")
+        private double endNanoMeters;
+        @JsonProperty("correctionFactors")
+        private double[] correctionFactors;
     }
 }

@@ -17,7 +17,8 @@ public class SpectrumPanel {
 
     private final JPanel panel;
     private final SpectrumGraphView spectrumGraphView;
-    private final CalibrationPanel calibrationPanel;
+    private final WaveLengthCalibrationPanel waveLengthCalibrationPanel;
+    private final SensitivityCalibrationPanel sensitivityCalibrationPanel;
     private final List<Cursor> commonWaveLengthCursors;
 
     public SpectrumPanel(@NonNull Context context) {
@@ -29,11 +30,12 @@ public class SpectrumPanel {
         final var commonWaveLengthsButton = new JToggleButton("Common Wavelengths");
         commonWaveLengthsButton.addActionListener(e -> showKnownWaveLengths(commonWaveLengthsButton.isSelected()));
 
-        this.calibrationPanel = new CalibrationPanel(this.context, this.spectrumGraphView);
-        this.calibrationPanel.getComponent().setVisible(true);
+        this.waveLengthCalibrationPanel = new WaveLengthCalibrationPanel(this.context, this.spectrumGraphView);
+        this.sensitivityCalibrationPanel = new SensitivityCalibrationPanel(this.context, this.spectrumGraphView);
 
         final var controlPanel = new JPanel(new FlowLayout());
-        controlPanel.add(this.calibrationPanel.getComponent());
+        controlPanel.add(this.waveLengthCalibrationPanel.getComponent());
+        controlPanel.add(this.sensitivityCalibrationPanel.getComponent());
         controlPanel.add(commonWaveLengthsButton);
 
         this.panel.add(this.spectrumGraphView, BorderLayout.CENTER);
