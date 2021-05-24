@@ -249,19 +249,19 @@ public final class Model {
     public void calibrateSensitivityWithReferenceLight(@NonNull Spectrum referenceLightSpectrum) {
         if (this.rawSpectrum != null) {
             final var correctionFactors = new double[this.rawSpectrum.getLength()];
-            double maxCorrectionFactor = 0.;
+            double maxCorrectionFactorInCalRange = 0.;
             for (int i = 0; i < this.rawSpectrum.getLength(); i++) {
                 final var nanoMeters = this.rawSpectrum.getNanoMetersAtIndex(i);
                 final var rawValue = this.rawSpectrum.getValueAtIndex(i);
                 final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
                 correctionFactors[i] = targetValue / rawValue;
-                if (maxCorrectionFactor < correctionFactors[i]) {
-                    maxCorrectionFactor = correctionFactors[i];
+                if (nanoMeters >= 400. && nanoMeters <= 700 && maxCorrectionFactorInCalRange < correctionFactors[i]) {
+                    maxCorrectionFactorInCalRange = correctionFactors[i];
                 }
             }
 
             for (int i = 0; i < correctionFactors.length; i++) {
-                correctionFactors[i] /= maxCorrectionFactor;
+                correctionFactors[i] = Math.min(1., correctionFactors[i] / maxCorrectionFactorInCalRange);
             }
 
             //TODO: smoothen correction factor spectrum!
