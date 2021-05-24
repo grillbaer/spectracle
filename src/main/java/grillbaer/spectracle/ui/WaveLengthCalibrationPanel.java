@@ -65,10 +65,10 @@ public class WaveLengthCalibrationPanel {
         this.panel.add(this.cancelButton);
 
         this.cursor0 = new Cursor("Cal0", 400.,
-                () -> getCursorLabel(this.cal0WaveLengthSelector, "λ₀"), CAL_0_COLOR);
+                () -> getCursorLabel(this.cal0WaveLengthSelector, "λ₀"), CAL_0_COLOR, CAL_0_COLOR);
         this.cursor0.setDraggable(true);
         this.cursor1 = new Cursor("Cal1", 700.,
-                () -> getCursorLabel(this.cal1WaveLengthSelector, "λ₁"), CAL_1_COLOR);
+                () -> getCursorLabel(this.cal1WaveLengthSelector, "λ₁"), CAL_1_COLOR, CAL_1_COLOR);
         this.cursor1.setDraggable(true);
 
         updateForCalibration();
@@ -80,10 +80,10 @@ public class WaveLengthCalibrationPanel {
     }
 
     private static String getCursorLabel(@NonNull WaveLengthSelector waveLengthSelector, @NonNull String waveLengthLabel) {
-        final var baseLabel = "Cal. set " + waveLengthLabel;
+        final var baseLabel = "<html>Calibration<br>Set " + waveLengthLabel;
 
         final var waveLength = waveLengthSelector.getValidWaveLength();
-        return waveLength != null ? baseLabel + " to " + waveLength.getWaveLengthNameString(false) + " here" : baseLabel;
+        return waveLength != null ? baseLabel + " = " + waveLength.getWaveLengthNameString(true) + " here" : baseLabel;
     }
 
     private void waveLengthSelectionChanged() {

@@ -1,15 +1,16 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
+import lombok.Getter;
 import lombok.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Basic view for spectral data over its X-axis with support for grid, cursors, labels etc.
@@ -21,6 +22,9 @@ public abstract class SpectralXView extends JComponent {
     protected int xAxisHeight;
     private final Map<String, Cursor> xCursorsById = new TreeMap<>();
 
+    @Getter
+    private int headRoomHeight;
+
     protected SpectralXView(int xAxisHeight) {
         this();
         this.xAxisHeight = xAxisHeight;
@@ -30,6 +34,14 @@ public abstract class SpectralXView extends JComponent {
         final var mouseHandler = new MouseHandler();
         addMouseListener(mouseHandler);
         addMouseMotionListener(mouseHandler);
+    }
+
+    public void setHeadRoomHeight(int headRoomHeight) {
+        if (this.headRoomHeight != headRoomHeight) {
+            this.headRoomHeight = headRoomHeight;
+            revalidate();
+            repaint();
+        }
     }
 
     public void setCalibration(WaveLengthCalibration waveLengthCalibration) {
@@ -62,12 +74,12 @@ public abstract class SpectralXView extends JComponent {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(100, 10);
+        return new Dimension(100, 10 + this.headRoomHeight);
     }
 
     @Override
     public Dimension getMinimumSize() {
-        return new Dimension(10, 10);
+        return new Dimension(10, 10 + this.headRoomHeight);
     }
 
     @Override
@@ -79,9 +91,9 @@ public abstract class SpectralXView extends JComponent {
     protected Rectangle calcViewArea() {
         final var insets = getInsets();
         final int x = insets.left;
-        final int y = insets.top;
+        final int y = insets.top + this.headRoomHeight;
         final int w = getWidth() - insets.left - insets.right;
-        final int h = getHeight() - insets.top - insets.bottom - xAxisHeight;
+        final int h = getHeight() - insets.top - insets.bottom - xAxisHeight - this.headRoomHeight;
 
         return new Rectangle(x, y, w, h);
     }
@@ -109,6 +121,12 @@ public abstract class SpectralXView extends JComponent {
      * Draw custom content.
      */
     protected abstract void drawView(Graphics2D g2);
+
+    protected void clearHeadroomArea(Graphics2D g2, Color color) {
+        g2.setColor(color);
+        g2.fillRect(this.viewArea.x, this.viewArea.y - getHeadRoomHeight(),
+                this.viewArea.width, this.viewArea.height);
+    }
 
     protected void clearViewArea(Graphics2D g2, Color color) {
         g2.setColor(color);
@@ -152,12 +170,47 @@ public abstract class SpectralXView extends JComponent {
     }
 
     protected void drawXCursors(Graphics2D g2) {
-        this.xCursorsById.values().forEach(c -> drawXCursor(g2, c));
+        final var labelAvoidAreas = new ArrayList<Rectangle>();
+        final var sortedCursors = this.xCursorsById.values()
+                .stream()
+                .sorted(Comparator.comparing(Cursor::getValue))
+                .collect(Collectors.toList());
+        for (Cursor c : sortedCursors) {
+            drawXCursor(g2, c, labelAvoidAreas);
+        }
     }
 
-    protected void drawXCursor(Graphics2D g2, Cursor cursor) {
+    protected void drawXCursor(Graphics2D g2, Cursor cursor, List<Rectangle> labelAvoidAreas) {
         final var x = (int) waveLengthToX(cursor.getValue());
-        cursor.draw(g2, x, this.viewArea.y, x, this.viewArea.y + this.viewArea.height);
+        final var y0 = this.viewArea.y - getHeadRoomHeight();
+        final var y1 = this.viewArea.y + this.viewArea.height + 5;
+        Rectangle labelBounds = null;
+        final var label = cursor.getLabelSupplier().get();
+        if (label != null && labelAvoidAreas != null) {
+            labelBounds = cursor.calcDefaultLabelBounds(g2, x, y0, x, y1, label);
+            if (labelBounds.getMaxX() > this.viewArea.getMaxX()) {
+                labelBounds.x = this.viewArea.x + this.viewArea.width - labelBounds.width;
+            }
+            moveDownOnCollision(labelAvoidAreas, labelBounds);
+            labelAvoidAreas.add(labelBounds);
+        }
+        cursor.draw(g2, x, y0, x, y1, labelBounds);
+    }
+
+    private void moveDownOnCollision(List<Rectangle> collisionAreas, Rectangle rect) {
+        // This kind of collision detection may have O(n^3) depending on the number of cursors n,
+        // but since usually only one or two passes are needed, O(n^2) will be reached in practice
+        // and the number of cursors is small enough.
+        boolean collision = true;
+        while (collision) {
+            collision = false;
+            for (Rectangle avoidArea : collisionAreas) {
+                if (avoidArea.intersects(rect)) {
+                    rect.y = avoidArea.y + avoidArea.height;
+                    collision = true;
+                }
+            }
+        }
     }
 
     protected double waveLengthToX(double nanoMeters) {

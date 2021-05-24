@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
+import grillbaer.spectracle.spectrum.Formatting;
 import grillbaer.spectracle.spectrum.Spectrum;
-import grillbaer.spectracle.spectrum.Viewing;
 import lombok.NonNull;
 
 import java.awt.*;
@@ -12,9 +12,11 @@ import java.awt.geom.Path2D;
  */
 public class SpectrumGraphView extends SpectralXView {
     private static final BasicStroke REFERENCE_LIGHT_GRAPH_STROKE =
-            new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{0f, 8f}, 0f);
-    private static final BasicStroke SENSITIITY_CALIBRATION_GRAPH_STROKE =
-            new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{0f, 3f}, 0f);
+            new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    1f, new float[]{0f, 8f}, 0f);
+    private static final BasicStroke SENSITIVITY_CALIBRATION_GRAPH_STROKE =
+            new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    1f, new float[]{0f, 3f}, 0f);
 
     private Spectrum spectrum;
 
@@ -23,6 +25,7 @@ public class SpectrumGraphView extends SpectralXView {
 
     public SpectrumGraphView() {
         super(20);
+        setHeadRoomHeight(80);
     }
 
     public void setSpectrum(Spectrum spectrum) {
@@ -44,27 +47,28 @@ public class SpectrumGraphView extends SpectralXView {
     @Override
     public Dimension getPreferredSize() {
         if (this.spectrum != null) {
-            return new Dimension(this.spectrum.getLength(), 100);
+            return new Dimension(this.spectrum.getLength(), 100 + getHeadRoomHeight());
         } else {
-            return new Dimension(300, 100);
+            return new Dimension(300, 100 + getHeadRoomHeight());
         }
     }
 
     @Override
     public Dimension getMinimumSize() {
-        return new Dimension(300, 100);
+        return new Dimension(300, 100 + getHeadRoomHeight());
     }
 
     @Override
     protected void drawView(Graphics2D g2) {
+        clearHeadroomArea(g2, Color.BLACK);
         clearViewArea(g2, Color.BLACK);
+        drawXCursors(g2);
         drawSpectrumAreaGraph(g2);
         drawXGridOverlay(g2);
         drawYGridOverlay(g2);
         drawXAxis(g2);
         drawReferenceLightGraph(g2);
         drawSensitivityCorrectionGraph(g2);
-        drawXCursors(g2);
     }
 
     private void drawYGridOverlay(Graphics2D g2) {
@@ -90,7 +94,7 @@ public class SpectrumGraphView extends SpectralXView {
             final double value = this.spectrum.getValueAtIndex(i);
             final int x = (int) waveLengthToX(nanoMeters);
             final int y = (int) valueToY(value);
-            final var color = Viewing.colorForWaveLength(nanoMeters);
+            final var color = Formatting.colorForWaveLength(nanoMeters);
             g2.setColor(color);
             g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
             lastX = x;
@@ -105,7 +109,7 @@ public class SpectrumGraphView extends SpectralXView {
 
     private void drawSensitivityCorrectionGraph(Graphics2D g2) {
         if (this.sensitivityCorrectionSpectrum != null) {
-            drawSpectrumLineGraph(this.sensitivityCorrectionSpectrum, g2, Color.GRAY, SENSITIITY_CALIBRATION_GRAPH_STROKE);
+            drawSpectrumLineGraph(this.sensitivityCorrectionSpectrum, g2, Color.GRAY, SENSITIVITY_CALIBRATION_GRAPH_STROKE);
         }
     }
 

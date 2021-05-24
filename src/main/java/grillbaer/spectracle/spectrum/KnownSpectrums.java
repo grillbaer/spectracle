@@ -1,5 +1,6 @@
 package grillbaer.spectracle.spectrum;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,25 +12,40 @@ public class KnownSpectrums {
         // no instances
     }
 
-    public static final List<NamedWaveLength> COMMON_WAVELENGTHS =
-            List.of(
-                    new NamedWaveLength("FL Hg Purple", 405),
-                    new NamedWaveLength("FL Hg Bright Blue", 436),
-                    new NamedWaveLength("FL Hg Brightest Green", 546),
-                    new NamedWaveLength("FL Eu Bright Red-Orange", 612),
-                    new NamedWaveLength("Fraunhofer K Ca+", 393),
-                    new NamedWaveLength("Fraunhofer H Ca+", 397),
-                    new NamedWaveLength("Fraunhofer G Ca/Fe", 431),
-                    new NamedWaveLength("Fraunhofer F H", 486),
-                    new NamedWaveLength("Fraunhofer b2 Mg", 517),
-                    new NamedWaveLength("Fraunhofer b1 Mg", 518),
-                    new NamedWaveLength("Fraunhofer E Fe", 527),
-                    new NamedWaveLength("Fraunhofer D2 Na", 589),
-                    new NamedWaveLength("Fraunhofer D1 Na", 590),
-                    new NamedWaveLength("Fraunhofer C H", 656),
-                    new NamedWaveLength("Fraunhofer B O₂", 687),
-                    new NamedWaveLength("Fraunhofer A O₂", 759)
-            );
+    /**
+     * Main spectral light of common fluorescent tubes.
+     *
+     * @see <href a="https://commons.wikimedia.org/wiki/File:Fluorescent_lighting_spectrum_peaks_labelled.gif">Wikimedia Commons</href>
+     */
+    public static final NamedWaveLengthGroup FLUORESCENT_LAMP_WAVELENGTHS =
+            new NamedWaveLengthGroup("Fluorescent Lamp", List.of(
+                    new NamedWaveLength("Hg Purple", 404.7),
+                    new NamedWaveLength("Hg Bright Blue", 435.8),
+                    new NamedWaveLength("Tb³⁺ Broad Cyan Peak", 487.5),
+                    new NamedWaveLength("Tb³⁺ Bright Green Left", 543),
+                    new NamedWaveLength("Hg Brightest Green Right", 546.1),
+                    new NamedWaveLength("Eu⁺³ Highest Yellow Peak", 587),
+                    new NamedWaveLength("Eu⁺³ Bright Red-Orange", 611),
+                    new NamedWaveLength("Eu⁺³ Red", 660),
+                    new NamedWaveLength("Eu⁺³ Dark Red", 710),
+                    new NamedWaveLength("Ar Infrared", 760)
+            ));
+
+    public static final NamedWaveLengthGroup FRAUNHOFER_WAVELENGTHS =
+            new NamedWaveLengthGroup("Fraunhofer", List.of(
+                    new NamedWaveLength("K Ca+", 393),
+                    new NamedWaveLength("H Ca+", 397),
+                    new NamedWaveLength("G Ca/Fe", 431),
+                    new NamedWaveLength("F H", 486),
+                    new NamedWaveLength("b2 Mg", 517),
+                    new NamedWaveLength("b1 Mg", 518),
+                    new NamedWaveLength("E Fe", 527),
+                    new NamedWaveLength("D2 Na", 589),
+                    new NamedWaveLength("D1 Na", 590),
+                    new NamedWaveLength("C H", 656),
+                    new NamedWaveLength("B O₂", 687),
+                    new NamedWaveLength("A O₂", 759)
+            ));
 
     private static double plancksRadiationLaw(double temperatureKelvin, double waveLengthMeter) {
         // Planck's law of radiation:
@@ -57,5 +73,13 @@ public class KnownSpectrums {
         }
 
         return Spectrum.create(new SampleLine(values), calibration);
+    }
+
+    public static List<NamedWaveLength> getCommonWaveLengths() {
+        final var all = new ArrayList<NamedWaveLength>();
+        all.addAll(FLUORESCENT_LAMP_WAVELENGTHS.getWaveLengthList());
+        all.addAll(FRAUNHOFER_WAVELENGTHS.getWaveLengthList());
+
+        return all;
     }
 }

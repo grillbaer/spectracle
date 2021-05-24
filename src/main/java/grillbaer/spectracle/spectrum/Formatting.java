@@ -10,8 +10,8 @@ import java.util.Locale;
 /**
  * Helpers for formatting and displaying.
  */
-public final class Viewing {
-    private Viewing() {
+public final class Formatting {
+    private Formatting() {
         // no instances
     }
 
@@ -73,7 +73,7 @@ public final class Viewing {
     }
 
     public static String formatWaveLength(double nanoMeters) {
-        return String.format(Locale.ROOT, "%.0f", nanoMeters);
+        return String.format(Locale.ROOT, "%.1f", nanoMeters);
     }
 
     @AllArgsConstructor

@@ -14,7 +14,7 @@ public class NamedWaveLength {
 
     public String getWaveLengthNameString(boolean withUnit) {
         final var sb = new StringBuilder();
-        sb.append(Viewing.formatWaveLength(this.nanoMeters));
+        sb.append(Formatting.formatWaveLength(this.nanoMeters));
         if (withUnit) {
             sb.append(" nm");
         }
@@ -27,6 +27,6 @@ public class NamedWaveLength {
 
     @Override
     public String toString() {
-        return Viewing.formatWaveLength(this.nanoMeters);
+        return Formatting.formatWaveLength(this.nanoMeters);
     }
 }

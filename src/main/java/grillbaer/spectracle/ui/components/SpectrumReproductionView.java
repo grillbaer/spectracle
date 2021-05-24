@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.spectrum.Spectrum;
-import grillbaer.spectracle.spectrum.Viewing;
+import grillbaer.spectracle.spectrum.Formatting;
 
 import java.awt.*;
 
@@ -64,7 +64,7 @@ public class SpectrumReproductionView extends SpectralXView {
     }
 
     protected Color valueToColor(double nanoMeters, double value) {
-        final var color = Viewing.colorForWaveLength(nanoMeters);
+        final var color = Formatting.colorForWaveLength(nanoMeters);
 
         return new Color(
                 (int) (value * color.getRed()),
