@@ -22,6 +22,7 @@ public abstract class SpectralXView extends JComponent {
     private final Map<String, Cursor> xCursorsById = new TreeMap<>();
 
     protected SpectralXView(int xAxisHeight) {
+        this();
         this.xAxisHeight = xAxisHeight;
     }
 

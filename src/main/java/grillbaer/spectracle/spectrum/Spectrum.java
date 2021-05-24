@@ -39,8 +39,8 @@ public final class Spectrum {
      */
     public double getValueAtNanoMeters(double nanoMeters) {
         final double fractionalIndex = (getLength() - 1) * this.calibration.nanoMetersToRatio(nanoMeters);
-        final int index0 = max(0, (int) floor(fractionalIndex));
-        final int index1 = min(getLength() - 1, (int) ceil(fractionalIndex));
+        final int index0 = max(0, min(getLength() - 1, (int) floor(fractionalIndex)));
+        final int index1 = max(0, min(getLength() - 1, (int) ceil(fractionalIndex)));
         if (index0 == index1) {
             return getValueAtIndex(index0);
         } else {
