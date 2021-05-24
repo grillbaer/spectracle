@@ -21,8 +21,11 @@ public class CameraPanel {
     private final JButton exposureMinusButton;
     private final JSlider exposureSlider;
     private final JButton exposurePlusButton;
+
     private final JButton cycleCameraButton;
     private final JButton playPauseButton;
+
+    private final JToggleButton normalizeSampleValuesButton;
 
     public CameraPanel(@NonNull Context context) {
         this.context = context;
@@ -56,11 +59,16 @@ public class CameraPanel {
         this.playPauseButton = new JButton();
         this.playPauseButton.addActionListener(e -> toggleCameraPaused());
 
+        this.normalizeSampleValuesButton = new JToggleButton("Normalize Sample");
+        this.normalizeSampleValuesButton.addActionListener(e -> this.context.getModel()
+                .setNormalizeSampleValues(this.normalizeSampleValuesButton.isSelected()));
+
         final var controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(this.cycleCameraButton);
         controlPanel.add(this.exposureMinusButton);
         controlPanel.add(this.exposureSlider);
         controlPanel.add(this.exposurePlusButton);
+        controlPanel.add(this.normalizeSampleValuesButton);
         controlPanel.add(this.playPauseButton);
 
         this.panel = new JPanel(new BorderLayout());

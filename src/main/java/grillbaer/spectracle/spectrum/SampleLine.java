@@ -13,6 +13,10 @@ public class SampleLine {
     private final double[] values;
     private final boolean[] overExposed;
 
+    private Double minValue;
+    private Double maxValue;
+
+
     public static final ToDoubleFunction<double[]> PIXEL_CHANNEL_AVERAGE = pixel -> {
         double value = 0.;
         for (double channel : pixel) {
@@ -83,6 +87,22 @@ public class SampleLine {
 
     public double[] getValues() {
         return Arrays.copyOf(this.values, this.values.length);
+    }
+
+    public double getMinValue() {
+        if (this.minValue == null) {
+            this.minValue = Arrays.stream(this.values).min().orElse(0.);
+        }
+
+        return this.minValue;
+    }
+
+    public double getMaxValue() {
+        if (this.maxValue == null) {
+            this.maxValue = Arrays.stream(this.values).max().orElse(0.);
+        }
+
+        return this.maxValue;
     }
 
     public boolean[] getOverExposed() {

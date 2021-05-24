@@ -31,6 +31,8 @@ public class Settings {
 
     @JsonProperty("selectedCameraId")
     private Integer selectedCameraId;
+    @JsonProperty("normalizeSampleValues")
+    private Boolean normalizeSampleValues;
 
     public static Settings readJson(@NonNull Path settingsFile) throws IOException {
         return new ObjectMapper().readValue(settingsFile.toFile(), Settings.class);

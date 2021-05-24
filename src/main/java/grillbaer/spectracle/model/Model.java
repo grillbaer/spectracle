@@ -47,6 +47,8 @@ public final class Model {
     @Getter(AccessLevel.NONE)
     private final Map<Integer, Spectrum> sensitivityCalibrationByCameraId = new TreeMap<>();
 
+    private boolean normalizeSampleValues;
+    private final Observers<Boolean> normalizeSampleValuesObservers = new Observers<>();
     private Spectrum rawSpectrum;
     private Spectrum spectrum;
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
@@ -58,7 +60,7 @@ public final class Model {
     }
 
     private void updateSampleLineFromGrabbedFrame() {
-        setSampleLine(
+        setRawSampleLine(
                 new SampleLine(this.currentFrame.getMat(),
                         (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
                         getSampleRows(), SampleLine.PIXEL_CHANNEL_MAX));
@@ -172,7 +174,7 @@ public final class Model {
             }
             if (!Objects.equals(oldCalibration, waveLengthCalibration)) {
                 if (this.spectrum != null) {
-                    setSampleLine(this.spectrum.getSampleLine());
+                    setRawSampleLine(this.spectrum.getSampleLine());
                 }
                 this.waveLengthCalibrationObservers.fire(waveLengthCalibration);
             }
@@ -203,10 +205,9 @@ public final class Model {
             oldCalibration = this.sensitivityCalibrationByCameraId.remove(cameraId);
         }
 
-        if (this.rawSpectrum != null
-                && Objects.equals(cameraId, getCameraId())
+        if (Objects.equals(cameraId, getCameraId())
                 && !Objects.equals(oldCalibration, sensitivityCalibration)) {
-            setSampleLine(this.rawSpectrum.getSampleLine());
+            recalcSampleLineFromRaw();
         }
     }
 
@@ -216,9 +217,9 @@ public final class Model {
         }
     }
 
-    public void setSampleLine(SampleLine sampleLine) {
-        if (sampleLine != null) {
-            this.rawSpectrum = Spectrum.create(sampleLine, getWaveLengthCalibration());
+    public void setRawSampleLine(SampleLine rawSampleLine) {
+        if (rawSampleLine != null) {
+            this.rawSpectrum = Spectrum.create(rawSampleLine, getWaveLengthCalibration());
             this.spectrum = calcSensitivityCorrectedSpectrum(this.rawSpectrum);
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
@@ -228,15 +229,38 @@ public final class Model {
         }
     }
 
+    public void setNormalizeSampleValues(boolean normalize) {
+        if (this.normalizeSampleValues != normalize) {
+            this.normalizeSampleValues = normalize;
+            recalcSampleLineFromRaw();
+            this.normalizeSampleValuesObservers.fire(this.normalizeSampleValues);
+        }
+    }
+
+    private void recalcSampleLineFromRaw() {
+        if (this.rawSpectrum != null) {
+            setRawSampleLine(this.rawSpectrum.getSampleLine());
+        }
+    }
+
     private Spectrum calcSensitivityCorrectedSpectrum(@NonNull Spectrum rawSpectrum) {
         final var sensitivityCalibration = getSensitivityCalibration();
-        if (sensitivityCalibration == null)
-            return rawSpectrum;
-
         final var corrected = new double[rawSpectrum.getLength()];
+        double maxCorrected = 0.;
         for (int i = 0; i < corrected.length; i++) {
             final var nanoMeters = rawSpectrum.getNanoMetersAtIndex(i);
-            corrected[i] = rawSpectrum.getValueAtIndex(i) * sensitivityCalibration.getValueAtNanoMeters(nanoMeters);
+            final var calibrationFactor =
+                    sensitivityCalibration != null ? sensitivityCalibration.getValueAtNanoMeters(nanoMeters) : 1.;
+            corrected[i] = rawSpectrum.getValueAtIndex(i) * calibrationFactor;
+            if (corrected[i] > maxCorrected) {
+                maxCorrected = corrected[i];
+            }
+        }
+
+        if (this.normalizeSampleValues && maxCorrected > 0.) {
+            for (int i = 0; i < corrected.length; i++) {
+                corrected[i] /= maxCorrected;
+            }
         }
 
         return Spectrum.create(new SampleLine(corrected, rawSpectrum.getSampleLine()
@@ -276,6 +300,8 @@ public final class Model {
     public Settings createSettings() {
         final var settings = new Settings();
         settings.setSelectedCameraId(getCameraId());
+        settings.setNormalizeSampleValues(isNormalizeSampleValues());
+
         for (Entry<Integer, CameraProps> entry : this.cameraPropsByCameraId.entrySet()) {
             settings.getOrCreateCamera(entry.getKey()).setCameraProps(entry.getValue());
         }
@@ -311,6 +337,10 @@ public final class Model {
                 setSensitivityCalibration(cameraSettings.getId(),
                         Spectrum.create(new SampleLine(corrFactors), wlCal));
             }
+        }
+
+        if (settings.getNormalizeSampleValues() != null) {
+            setNormalizeSampleValues(settings.getNormalizeSampleValues());
         }
 
         if (settings.getSelectedCameraId() != null) {
