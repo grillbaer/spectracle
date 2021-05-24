@@ -11,6 +11,7 @@ import java.util.function.ToDoubleFunction;
  */
 public class SampleLine {
     private final double[] values;
+    private final boolean[] overExposed;
 
     public static final ToDoubleFunction<double[]> PIXEL_CHANNEL_AVERAGE = pixel -> {
         double value = 0.;
@@ -29,12 +30,22 @@ public class SampleLine {
         return value;
     };
 
-    public SampleLine(double[] values) {
+    public SampleLine(@NonNull double[] values) {
         this.values = values;
+        this.overExposed = null;
+    }
+
+    public SampleLine(@NonNull double[] values, boolean[] overExposed) {
+        if (overExposed != null && values.length != overExposed.length)
+            throw new IllegalArgumentException("values and overExposed arrays have different lengths "
+                    + values.length + " and " + overExposed.length);
+        this.values = values;
+        this.overExposed = overExposed;
     }
 
     public SampleLine(@NonNull Mat mat, int centerRow, int rows, ToDoubleFunction<double[]> pixelToValueFunction) {
         this.values = new double[mat.cols()];
+        this.overExposed = new boolean[mat.cols()];
         final var rawPixel = new byte[mat.channels()];
         final var normPixel = new double[mat.channels()];
 
@@ -48,7 +59,11 @@ public class SampleLine {
 
                 mat.get(row, col, rawPixel);
                 for (int i = 0; i < rawPixel.length; i++) {
-                    normPixel[i] += (((int) rawPixel[i]) & 0xff) / 255. / rows;
+                    final var channelValue = ((int) rawPixel[i]) & 0xff;
+                    normPixel[i] += channelValue / 255. / rows;
+                    if (channelValue >= 255) {
+                        this.overExposed[col] = true;
+                    }
                 }
             }
 
@@ -56,7 +71,6 @@ public class SampleLine {
             if (values[col] < 0f) values[col] = 0f;
             if (values[col] > 1f) values[col] = 1f;
         }
-
     }
 
     public int getLength() {
@@ -69,5 +83,17 @@ public class SampleLine {
 
     public double[] getValues() {
         return Arrays.copyOf(this.values, this.values.length);
+    }
+
+    public boolean[] getOverExposed() {
+        if (this.overExposed != null) {
+            return Arrays.copyOf(this.overExposed, this.overExposed.length);
+        } else {
+            return null;
+        }
+    }
+
+    public boolean isOverExposed(int index) {
+        return this.overExposed != null && this.overExposed[index];
     }
 }

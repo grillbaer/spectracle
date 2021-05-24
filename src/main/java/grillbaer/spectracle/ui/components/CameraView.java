@@ -1,11 +1,13 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.camera.Frame;
+import grillbaer.spectracle.spectrum.Spectrum;
 
 import java.awt.*;
 
 public class CameraView extends SpectralXView {
     private Frame frame;
+    private Spectrum spectrum;
 
     private Double sampleRowRatio;
     private int sampleRows = 3;
@@ -27,6 +29,13 @@ public class CameraView extends SpectralXView {
                     || oldFrame.getHeight() != this.frame.getHeight()) {
                 revalidate();
             }
+            repaint();
+        }
+    }
+
+    public void setSpectrum(Spectrum spectrum) {
+        if (this.spectrum != spectrum) {
+            this.spectrum = spectrum;
             repaint();
         }
     }
@@ -66,6 +75,7 @@ public class CameraView extends SpectralXView {
                             renderDim.width, renderDim.height, null);
                     g2.setClip(origClip);
                     drawSampleRowBounds(g2, bounds);
+                    drawOverExposure(g2, bounds);
                 }
             }
         }
@@ -101,6 +111,26 @@ public class CameraView extends SpectralXView {
         g2.setColor(origColor);
     }
 
+    private void drawOverExposure(Graphics2D g2, Rectangle sampleRowBounds) {
+        if (this.spectrum != null) {
+            int index = 0;
+            while (index < this.spectrum.getLength()) {
+                if (this.spectrum.getSampleLine().isOverExposed(index)) {
+                    final var overBegin = index;
+                    while (index < this.spectrum.getLength() && this.spectrum.getSampleLine().isOverExposed(index))
+                        index++;
+                    final var overEnd = index - 1;
+                    final var x0 = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(overBegin));
+                    final var x1 = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(overEnd));
+                    g2.setColor(Color.BLACK);
+                    g2.fillRect(x0 - 1, sampleRowBounds.y - 8, x1 - x0 + 3, 4);
+                    g2.setColor(Color.RED);
+                    g2.fillRect(x0, sampleRowBounds.y - 7, x1 - x0 + 1, 2);
+                }
+                index++;
+            }
+        }
+    }
 
     @Override
     public Dimension getPreferredSize() {

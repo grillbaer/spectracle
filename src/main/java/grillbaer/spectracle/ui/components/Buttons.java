@@ -27,7 +27,6 @@ public final class Buttons {
     public static JButton createCancelButton() {
         final var button = new JButton("❌", null);
         button.setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
-        //button.setForeground(Color.GRAY);
 
         return button;
     }

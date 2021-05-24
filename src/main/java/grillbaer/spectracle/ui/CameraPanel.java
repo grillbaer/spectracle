@@ -36,6 +36,7 @@ public class CameraPanel {
 
         this.cameraView.setFrame(this.context.getModel().getCurrentFrame());
         this.context.getModel().getFrameGrabbedObservers().add(this.cameraView::setFrame);
+        this.context.getModel().getSpectrumObservers().add(this.cameraView::setSpectrum);
 
         this.spectrumReproductionView = new SpectrumReproductionView();
         this.spectrumReproductionView.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));

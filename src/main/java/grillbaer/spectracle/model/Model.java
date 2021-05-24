@@ -203,10 +203,10 @@ public final class Model {
             oldCalibration = this.sensitivityCalibrationByCameraId.remove(cameraId);
         }
 
-        if (Objects.equals(cameraId, getCameraId()) && !Objects.equals(oldCalibration, sensitivityCalibration)) {
-            if (this.rawSpectrum != null) {
-                setSampleLine(this.rawSpectrum.getSampleLine());
-            }
+        if (this.rawSpectrum != null
+                && Objects.equals(cameraId, getCameraId())
+                && !Objects.equals(oldCalibration, sensitivityCalibration)) {
+            setSampleLine(this.rawSpectrum.getSampleLine());
         }
     }
 
@@ -239,7 +239,8 @@ public final class Model {
             corrected[i] = rawSpectrum.getValueAtIndex(i) * sensitivityCalibration.getValueAtNanoMeters(nanoMeters);
         }
 
-        return Spectrum.create(new SampleLine(corrected), rawSpectrum.getCalibration());
+        return Spectrum.create(new SampleLine(corrected, rawSpectrum.getSampleLine()
+                .getOverExposed()), rawSpectrum.getCalibration());
     }
 
     /**
