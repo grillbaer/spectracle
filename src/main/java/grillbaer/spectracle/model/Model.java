@@ -13,10 +13,8 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import javax.swing.*;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -49,11 +47,26 @@ public final class Model {
 
     private boolean normalizeSampleValues;
     private final Observers<Boolean> normalizeSampleValuesObservers = new Observers<>();
+    /**
+     * Spectrum as it came from the last camera frame.
+     */
     private Spectrum rawSpectrum;
+    /**
+     * Spectrum with some averaging and noise removal.
+     */
+    private Spectrum purifiedSpectrum;
+    /**
+     * Intensity calibrated, normalized, smoothed spectrum to be shown in the spectrum graph.
+     */
     private Spectrum spectrum;
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
+
     private double sampleRowPosRatio = 0.5;
     private int sampleRows = 10;
+    private double timeAveragingFactor = 0.;
+    private double smoothIndexSteps = 0;
+
+    private Map<String, String> lastUsedDirectories = new HashMap<>();
 
     public Model() {
         getFrameGrabbedObservers().add(cam -> updateSampleLineFromGrabbedFrame());
@@ -63,7 +76,7 @@ public final class Model {
         setRawSampleLine(
                 new SampleLine(this.currentFrame.getMat(),
                         (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
-                        getSampleRows(), SampleLine.PIXEL_CHANNEL_MAX));
+                        getSampleRows(), SampleLine.PIXEL_CHANNEL_AVERAGE));
     }
 
     /**
@@ -220,10 +233,17 @@ public final class Model {
     public void setRawSampleLine(SampleLine rawSampleLine) {
         if (rawSampleLine != null) {
             this.rawSpectrum = Spectrum.create(rawSampleLine, getWaveLengthCalibration());
-            this.spectrum = calcSensitivityCorrectedSpectrum(this.rawSpectrum);
+            updatePurifiedSpectrumFromRaw();
+            updateProcessedSpectrumFromPurified();
+            System.out.format("%.04f %.04f %.04f\n",
+                    this.rawSpectrum.getValueAtIndex(500),
+                    this.purifiedSpectrum.getValueAtIndex(500),
+                    this.spectrum.getValueAtIndex(500)
+            );
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
             this.rawSpectrum = null;
+            this.purifiedSpectrum = null;
             this.spectrum = null;
             this.spectrumObservers.fire(null);
         }
@@ -237,34 +257,75 @@ public final class Model {
         }
     }
 
+    public void setSmoothIndexSteps(double smoothIndexSteps) {
+        if (this.smoothIndexSteps != smoothIndexSteps) {
+            this.smoothIndexSteps = smoothIndexSteps;
+            recalcSampleLineFromRaw();
+        }
+    }
+
+    public void setTimeAveragingFactor(double timeAveragingFactor) {
+        if (this.timeAveragingFactor != timeAveragingFactor) {
+            this.timeAveragingFactor = timeAveragingFactor;
+            recalcSampleLineFromRaw();
+        }
+    }
+
     private void recalcSampleLineFromRaw() {
         if (this.rawSpectrum != null) {
             setRawSampleLine(this.rawSpectrum.getSampleLine());
         }
     }
 
-    private Spectrum calcSensitivityCorrectedSpectrum(@NonNull Spectrum rawSpectrum) {
+    private void updatePurifiedSpectrumFromRaw() {
+        if (this.rawSpectrum == null)
+            return;
+
+        if (this.purifiedSpectrum == null
+                || this.purifiedSpectrum.getLength() != this.rawSpectrum.getLength()) {
+            this.purifiedSpectrum = this.rawSpectrum;
+            return;
+        }
+
+        final var purified = this.purifiedSpectrum.getSampleLine().getValues();
+        for (int i = 0; i < purified.length; i++) {
+            final var oldValue = purified[i];
+            final var newValue = this.rawSpectrum.getValueAtIndex(i);
+            final var oldShare = this.timeAveragingFactor;
+            purified[i] = oldValue * oldShare + newValue * (1. - oldShare);
+        }
+
+        this.purifiedSpectrum = Spectrum.create(
+                new SampleLine(purified, this.rawSpectrum.getSampleLine().getOverExposed()),
+                this.rawSpectrum.getCalibration());
+    }
+
+    private void updateProcessedSpectrumFromPurified() {
         final var sensitivityCalibration = getSensitivityCalibration();
-        final var corrected = new double[rawSpectrum.getLength()];
-        double maxCorrected = 0.;
-        for (int i = 0; i < corrected.length; i++) {
-            final var nanoMeters = rawSpectrum.getNanoMetersAtIndex(i);
+        var result = new double[this.purifiedSpectrum.getLength()];
+        for (int i = 0; i < result.length; i++) {
+            final var nanoMeters = this.purifiedSpectrum.getNanoMetersAtIndex(i);
             final var calibrationFactor =
                     sensitivityCalibration != null ? sensitivityCalibration.getValueAtNanoMeters(nanoMeters) : 1.;
-            corrected[i] = rawSpectrum.getValueAtIndex(i) * calibrationFactor;
-            if (corrected[i] > maxCorrected) {
-                maxCorrected = corrected[i];
+            result[i] = this.purifiedSpectrum.getValueAtIndex(i) * calibrationFactor;
+        }
+
+        if (this.smoothIndexSteps > 0) {
+            result = new SampleLine(result).withGaussianSmooth(this.smoothIndexSteps).getValues();
+        }
+
+        if (this.normalizeSampleValues) {
+            final var maxValue = Arrays.stream(result).max().getAsDouble();
+            if (maxValue > 0.) {
+                for (int i = 0; i < result.length; i++) {
+                    result[i] /= maxValue;
+                }
             }
         }
 
-        if (this.normalizeSampleValues && maxCorrected > 0.) {
-            for (int i = 0; i < corrected.length; i++) {
-                corrected[i] /= maxCorrected;
-            }
-        }
-
-        return Spectrum.create(new SampleLine(corrected, rawSpectrum.getSampleLine()
-                .getOverExposed()), rawSpectrum.getCalibration());
+        this.spectrum = Spectrum.create(
+                new SampleLine(result, this.purifiedSpectrum.getSampleLine().getOverExposed()),
+                this.purifiedSpectrum.getCalibration());
     }
 
     /**
@@ -273,11 +334,15 @@ public final class Model {
      */
     public void calibrateSensitivityWithReferenceLight(@NonNull Spectrum referenceLightSpectrum) {
         if (this.rawSpectrum != null) {
-            final var correctionFactors = new double[this.rawSpectrum.getLength()];
+            final var measuredSpectrum = Spectrum.create(
+                    this.rawSpectrum.getSampleLine().withGaussianSmooth(5),
+                    this.rawSpectrum.getCalibration());
+
+            final var correctionFactors = new double[measuredSpectrum.getLength()];
             double maxCorrectionFactorInCalRange = 0.;
-            for (int i = 0; i < this.rawSpectrum.getLength(); i++) {
-                final var nanoMeters = this.rawSpectrum.getNanoMetersAtIndex(i);
-                final var rawValue = this.rawSpectrum.getValueAtIndex(i);
+            for (int i = 0; i < measuredSpectrum.getLength(); i++) {
+                final var nanoMeters = measuredSpectrum.getNanoMetersAtIndex(i);
+                final var rawValue = measuredSpectrum.getValueAtIndex(i);
                 final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
                 correctionFactors[i] = targetValue / rawValue;
                 if (nanoMeters >= 400. && nanoMeters <= 700 && maxCorrectionFactorInCalRange < correctionFactors[i]) {
@@ -289,11 +354,21 @@ public final class Model {
                 correctionFactors[i] = Math.min(1., correctionFactors[i] / maxCorrectionFactorInCalRange);
             }
 
-            //TODO: smoothen correction factor spectrum!
-
             final var sensitivityCalibration =
                     Spectrum.create(new SampleLine(correctionFactors), this.rawSpectrum.getCalibration());
             setSensitivityCalibration(sensitivityCalibration);
+        }
+    }
+
+    public String getLastUsedDirectory(@NonNull String contentName) {
+        return this.lastUsedDirectories.get(contentName);
+    }
+
+    public void setLastUsedDirectory(@NonNull String contentName, String directory) {
+        if (directory != null) {
+            this.lastUsedDirectories.put(contentName, directory);
+        } else {
+            this.lastUsedDirectories.remove(contentName);
         }
     }
 
@@ -315,6 +390,8 @@ public final class Model {
                             correctionFactors.getCalibration().getEndNanoMeters(),
                             correctionFactors.getSampleLine().getValues()));
         }
+
+        settings.setLastUsedDirectories(this.lastUsedDirectories);
 
         return settings;
     }
@@ -352,6 +429,10 @@ public final class Model {
                     oldCam.close();
                 }
             }
+        }
+
+        if (settings.getLastUsedDirectories() != null) {
+            this.lastUsedDirectories.putAll(settings.getLastUsedDirectories());
         }
     }
 }

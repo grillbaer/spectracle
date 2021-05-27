@@ -9,10 +9,7 @@ import lombok.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 
@@ -33,6 +30,9 @@ public class Settings {
     private Integer selectedCameraId;
     @JsonProperty("normalizeSampleValues")
     private Boolean normalizeSampleValues;
+
+    @JsonProperty("lastUsedDirectories")
+    private final Map<String, String> lastUsedDirectories = new HashMap<>();
 
     public static Settings readJson(@NonNull Path settingsFile) throws IOException {
         return new ObjectMapper().readValue(settingsFile.toFile(), Settings.class);
@@ -59,6 +59,11 @@ public class Settings {
     public void setCamerasAsList(List<Camera> cameras) {
         this.camerasById.clear();
         cameras.forEach(cam -> this.camerasById.put(cam.getId(), cam));
+    }
+
+    public void setLastUsedDirectories(Map<String, String> lastUsedDirectories) {
+        this.lastUsedDirectories.clear();
+        this.lastUsedDirectories.putAll(lastUsedDirectories);
     }
 
     @Getter

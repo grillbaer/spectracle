@@ -3,12 +3,16 @@ package grillbaer.spectracle.ui;
 import grillbaer.spectracle.Context;
 import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
+import grillbaer.spectracle.model.SpectrumDataFiles;
 import grillbaer.spectracle.ui.components.CameraView;
+import grillbaer.spectracle.ui.components.Dialogs;
 import grillbaer.spectracle.ui.components.SpectrumReproductionView;
+import javafx.stage.FileChooser;
 import lombok.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class CameraPanel {
     private final Context context;
@@ -24,6 +28,8 @@ public class CameraPanel {
 
     private final JButton cycleCameraButton;
     private final JButton playPauseButton;
+    private final JButton saveButton;
+    private final JButton loadButton;
 
     private final JToggleButton normalizeSampleValuesButton;
 
@@ -46,6 +52,9 @@ public class CameraPanel {
         this.spectrumReproductionView.setSpectrum(this.context.getModel().getSpectrum());
         this.context.getModel().getSpectrumObservers().add(this.spectrumReproductionView::setSpectrum);
 
+        this.cycleCameraButton = new JButton();
+        this.cycleCameraButton.addActionListener(a -> cycleToNextCamera());
+
         this.exposureSlider = new JSlider(SwingConstants.HORIZONTAL, -15 * EXPOSURE_RESOLUTION, 10 * EXPOSURE_RESOLUTION, 0);
         this.exposureSlider.addChangeListener(e -> panelToCameraProps());
         this.exposureMinusButton = new JButton("🔅");
@@ -53,15 +62,17 @@ public class CameraPanel {
         this.exposurePlusButton = new JButton("\uD83D\uDD06");
         this.exposurePlusButton.addActionListener(e -> this.exposureSlider.setValue(this.exposureSlider.getValue() + 1));
 
-        this.cycleCameraButton = new JButton();
-        this.cycleCameraButton.addActionListener(a -> cycleToNextCamera());
+        this.normalizeSampleValuesButton = new JToggleButton("⭱ Normalize");
+        this.normalizeSampleValuesButton.addActionListener(e -> this.context.getModel()
+                .setNormalizeSampleValues(this.normalizeSampleValuesButton.isSelected()));
 
         this.playPauseButton = new JButton();
         this.playPauseButton.addActionListener(e -> toggleCameraPaused());
 
-        this.normalizeSampleValuesButton = new JToggleButton("Normalize Sample");
-        this.normalizeSampleValuesButton.addActionListener(e -> this.context.getModel()
-                .setNormalizeSampleValues(this.normalizeSampleValuesButton.isSelected()));
+        this.saveButton = new JButton("\uD83E\uDC46\uD83D\uDDCE Save");
+        this.saveButton.addActionListener(e -> saveData());
+        this.loadButton = new JButton("\uD83D\uDDCE\uD83E\uDC46 Load");
+        this.loadButton.addActionListener(e -> loadData());
 
         final var controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(this.cycleCameraButton);
@@ -70,6 +81,8 @@ public class CameraPanel {
         controlPanel.add(this.exposurePlusButton);
         controlPanel.add(this.normalizeSampleValuesButton);
         controlPanel.add(this.playPauseButton);
+        controlPanel.add(this.saveButton);
+        controlPanel.add(this.loadButton);
 
         this.panel = new JPanel(new BorderLayout());
         this.panel.add(this.spectrumReproductionView, BorderLayout.NORTH);
@@ -92,8 +105,37 @@ public class CameraPanel {
         this.context.getModel().setCameraPaused(!this.context.getModel().isCameraPaused());
     }
 
+    private void saveData() {
+        final var file = Dialogs.showSaveFileDialog(this.context, getComponent(), "Spectrum Data",
+                List.of(new FileChooser.ExtensionFilter("Comma Separated Values", "*.csv")), null);
+        if (file != null) {
+            try {
+                new SpectrumDataFiles().writeCsvFile(this.context.getModel().getRawSpectrum(), this.context.getModel()
+                        .getSpectrum(), file);
+            } catch (Exception e) {
+                Dialogs.showErrorDialog(getComponent(), "Saving CSV to " + file + "failed.", e.getMessage());
+            }
+        }
+    }
+
+    private void loadData() {
+        final var file = Dialogs.showOpenFileDialog(this.context, getComponent(), "Spectrum Data",
+                List.of(new FileChooser.ExtensionFilter("Comma Separated Values", "*.csv")), null);
+        if (file != null) {
+            try {
+                final var spectra = new SpectrumDataFiles().readCsvFile(file);
+                this.context.getModel().setRawSampleLine(spectra.getRaw().getSampleLine());
+            } catch (Exception e) {
+                Dialogs.showErrorDialog(getComponent(), "Loading CSV from " + file + "failed.", e.getMessage());
+            }
+        }
+    }
+
+
     private void playPausedToPanel(boolean paused) {
         this.playPauseButton.setText(paused ? "▶ Play" : "⏹ Stop");
+        this.saveButton.setEnabled(paused);
+        this.loadButton.setEnabled(paused);
     }
 
     private void cameraToPanel(Camera camera) {

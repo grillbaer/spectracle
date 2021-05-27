@@ -1,11 +1,14 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.spectrum.Formatting;
+import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
 import lombok.NonNull;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 /**
  * Spectrum visualization is XY graph.
@@ -67,6 +70,7 @@ public class SpectrumGraphView extends SpectralXView {
         drawXGridOverlay(g2);
         drawYGridOverlay(g2);
         drawXAxis(g2);
+        drawExtrema(g2);
         drawReferenceLightGraph(g2);
         drawSensitivityCorrectionGraph(g2);
     }
@@ -98,6 +102,30 @@ public class SpectrumGraphView extends SpectralXView {
             g2.setColor(color);
             g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
             lastX = x;
+        }
+    }
+
+    private void drawExtrema(Graphics2D g2) {
+        final var extrema = this.spectrum.getSampleLine().findLocalExtrema(2, 15);
+        final var maxima = extrema.stream()
+                .filter(e -> e.getLevel() > 0)
+                .sorted(Comparator.comparing(SampleLine.Extremum::getLevel).reversed())
+                .limit(20)
+                .collect(Collectors.toList());
+        final var minima = extrema.stream()
+                .filter(e -> e.getLevel() < 0)
+                .sorted(Comparator.comparing(SampleLine.Extremum::getLevel))
+                .limit(20)
+                .collect(Collectors.toList());
+        for (SampleLine.Extremum extremum : maxima) {
+            final var nanoMeters = this.spectrum.getNanoMetersAtIndex(extremum.getIndex());
+            final int x = (int) waveLengthToX(nanoMeters);
+            final int y = (int) valueToY(this.spectrum.getValueAtIndex(extremum.getIndex()));
+            g2.setColor(new Color(170, 170, 170, 150));
+            g2.setBackground(Color.BLACK);
+            g2.fillRect(x, y, 1, 1);
+            RenderUtils.drawText(g2, Formatting.formatWaveLength(nanoMeters), new Rectangle(x, y - 20, 0, 20),
+                    RenderUtils.Alignment.CENTER, RenderUtils.Direction.RIGHT, false, false, RenderUtils.Effect.SHADOW);
         }
     }
 

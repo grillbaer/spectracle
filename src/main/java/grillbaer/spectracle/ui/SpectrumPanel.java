@@ -15,6 +15,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.exp;
+import static javax.swing.SwingConstants.HORIZONTAL;
+
 public class SpectrumPanel {
     private final Context context;
 
@@ -22,6 +25,9 @@ public class SpectrumPanel {
     private final SpectrumGraphView spectrumGraphView;
     private final WaveLengthCalibrationPanel waveLengthCalibrationPanel;
     private final SensitivityCalibrationPanel sensitivityCalibrationPanel;
+    private final JLabel smoothLabel;
+    private final JLabel timeAverageLabel;
+
     private final List<Cursor> commonWaveLengthCursors = new ArrayList<>();
 
     public SpectrumPanel(@NonNull Context context) {
@@ -29,6 +35,9 @@ public class SpectrumPanel {
 
         this.panel = new JPanel(new BorderLayout());
         this.spectrumGraphView = new SpectrumGraphView();
+
+        this.waveLengthCalibrationPanel = new WaveLengthCalibrationPanel(this.context, this.spectrumGraphView);
+        this.sensitivityCalibrationPanel = new SensitivityCalibrationPanel(this.context, this.spectrumGraphView);
 
         final var knownWaveLengthsComboBox = new JComboBox<>(new NamedWaveLengthGroup[]{
                 new NamedWaveLengthGroup("No Known Wavelengths", List.of()),
@@ -38,19 +47,46 @@ public class SpectrumPanel {
         knownWaveLengthsComboBox.addActionListener(
                 e -> showKnownWaveLengths(((NamedWaveLengthGroup) knownWaveLengthsComboBox.getSelectedItem())));
 
-        this.waveLengthCalibrationPanel = new WaveLengthCalibrationPanel(this.context, this.spectrumGraphView);
-        this.sensitivityCalibrationPanel = new SensitivityCalibrationPanel(this.context, this.spectrumGraphView);
+        final JSlider timeAverageSlider = new JSlider(HORIZONTAL, 0, 100, 0);
+        this.timeAverageLabel = new JLabel();
+        timeAverageSlider.addChangeListener(e -> {
+            this.context.getModel().setTimeAveragingFactor(getExpSliderValue(timeAverageSlider, 0., 0.95));
+            updateProcessingLabels();
+        });
+
+        final JSlider smoothSlider = new JSlider(HORIZONTAL, 0, 100, 0);
+        this.smoothLabel = new JLabel();
+        smoothSlider.addChangeListener(e -> {
+            this.context.getModel().setSmoothIndexSteps(getExpSliderValue(smoothSlider, 0., 5.));
+            updateProcessingLabels();
+        });
 
         final var controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(this.waveLengthCalibrationPanel.getComponent());
         controlPanel.add(this.sensitivityCalibrationPanel.getComponent());
         controlPanel.add(knownWaveLengthsComboBox);
+        controlPanel.add(timeAverageSlider);
+        controlPanel.add(this.timeAverageLabel);
+        controlPanel.add(smoothSlider);
+        controlPanel.add(this.smoothLabel);
 
         this.panel.add(this.spectrumGraphView, BorderLayout.CENTER);
         this.panel.add(controlPanel, BorderLayout.SOUTH);
 
         this.context.getModel().getSpectrumObservers()
                 .add(this.spectrumGraphView::setSpectrum);
+
+        updateProcessingLabels();
+    }
+
+    private double getExpSliderValue(@NonNull JSlider slider, double begin, double end) {
+        return (exp((double) slider.getValue() / (slider.getMaximum() - slider.getMinimum())) - 1.)
+                / (Math.E - 1.) * (end - begin) + begin;
+    }
+
+    private void updateProcessingLabels() {
+        this.timeAverageLabel.setText(String.format("%.2f", this.context.getModel().getTimeAveragingFactor()));
+        this.smoothLabel.setText(String.format("%.1f", this.context.getModel().getSmoothIndexSteps()));
     }
 
     public JComponent getComponent() {

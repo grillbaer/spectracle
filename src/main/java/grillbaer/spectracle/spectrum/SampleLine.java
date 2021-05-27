@@ -1,10 +1,18 @@
 package grillbaer.spectracle.spectrum;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.opencv.core.Mat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.ToDoubleFunction;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * Line of sample values, used for the measurement points of a spectrum.
@@ -115,5 +123,56 @@ public class SampleLine {
 
     public boolean isOverExposed(int index) {
         return this.overExposed != null && this.overExposed[index];
+    }
+
+    public SampleLine withGaussianSmooth(double sigmaInIndexSteps) {
+        if (sigmaInIndexSteps <= 0)
+            return this;
+
+        final var distrib = new NormalDistribution(0., sigmaInIndexSteps);
+        final var smoothArray = new double[(int) sigmaInIndexSteps * 3 + 2];
+        var sum = 0.0;
+        for (int i = 0; i < smoothArray.length; i++) {
+            smoothArray[i] = distrib.density(i);
+            sum += (i > 0 ? 2 : 1) * smoothArray[i];
+        }
+        final var result = new double[getLength()];
+        for (int i = 0; i < getLength(); i++) {
+            result[i] = smoothArray[0] * getValue(i);
+            for (int j = 1; j < smoothArray.length; j++) {
+                result[i] += smoothArray[j] * (getValue(max(0, i - j)) + getValue(min(getLength() - 1, i + j)));
+            }
+            result[i] /= sum;
+        }
+
+        return new SampleLine(result, this.overExposed);
+    }
+
+    public List<Extremum> findLocalExtrema(int noiseSigmaIndexSteps, int baseSigmaIndexSteps) {
+        final var denoised = withGaussianSmooth(noiseSigmaIndexSteps);
+        final var baseLevel = withGaussianSmooth(baseSigmaIndexSteps);
+        final var delta = new double[getLength()];
+        for (int i = 0; i < delta.length; i++) {
+            delta[i] = denoised.getValue(i) - baseLevel.getValue(i);
+        }
+
+        final var extrema = new ArrayList<Extremum>();
+        for (int i = 1; i < delta.length - 1; i++) {
+            if ((denoised.getValue(i - 1) < denoised.getValue(i) && denoised.getValue(i) > denoised.getValue(i + 1))
+                    || (denoised.getValue(i - 1) > denoised.getValue(i) && denoised.getValue(i) < denoised.getValue(i + 1))) {
+                int fineIndex = getValue(i) > getValue(i - 1) ? i : i - 1;
+                fineIndex = getValue(fineIndex) > getValue(i + 1) ? i : i + 1;
+                extrema.add(new Extremum(fineIndex, 100 * delta[i]));
+            }
+        }
+
+        return extrema;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class Extremum {
+        private int index;
+        private double level;
     }
 }
