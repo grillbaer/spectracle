@@ -24,6 +24,7 @@ public final class Camera implements Closeable {
         this.videoCapture = new VideoCapture(id);
 
         disableAutoWhiteBalance();
+        disableSharpening();
         setCameraProps(getBackendCameraProps().withFrameWidth(1280).withFrameHeight(720));
     }
 
@@ -44,6 +45,10 @@ public final class Camera implements Closeable {
         setProp(Videoio.CAP_PROP_AUTO_WB, 0., true);
         setProp(Videoio.CAP_PROP_TEMPERATURE, 5000., true);
         setProp(Videoio.CAP_PROP_WB_TEMPERATURE, 5000., true);
+    }
+
+    private void disableSharpening() {
+        setProp(Videoio.CAP_PROP_SHARPNESS, 0., true);
     }
 
     public synchronized void setCameraProps(@NonNull CameraProps cameraProps) {
