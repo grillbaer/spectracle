@@ -58,14 +58,14 @@ public class SpectrumPanel {
         final JSlider timeAverageSlider = new JSlider(HORIZONTAL, 0, 100, 0);
         this.timeAverageLabel = new JLabel();
         timeAverageSlider.addChangeListener(e -> {
-            this.context.getModel().setTimeAveragingFactor(getExpSliderValue(timeAverageSlider, 0., 0.95));
+            this.context.getModel().setTimeAveragingFactor(getExpSliderValue(timeAverageSlider, 0.95, 0., true));
             updateProcessingLabels();
         });
 
         final JSlider smoothSlider = new JSlider(HORIZONTAL, 0, 100, 0);
         this.smoothLabel = new JLabel();
         smoothSlider.addChangeListener(e -> {
-            this.context.getModel().setSmoothIndexSteps(getExpSliderValue(smoothSlider, 0., 5.));
+            this.context.getModel().setSmoothIndexSteps(getExpSliderValue(smoothSlider, 0., 5., false));
             updateProcessingLabels();
         });
 
@@ -89,9 +89,14 @@ public class SpectrumPanel {
         updateProcessingLabels();
     }
 
-    private double getExpSliderValue(@NonNull JSlider slider, double begin, double end) {
-        return (exp((double) slider.getValue() / (slider.getMaximum() - slider.getMinimum())) - 1.)
-                / (Math.E - 1.) * (end - begin) + begin;
+    private double getExpSliderValue(@NonNull JSlider slider, double begin, double end, boolean inverse) {
+        var ratio = (double) (slider.getValue() - slider.getMinimum())
+                / (slider.getMaximum() - slider.getMinimum());
+        if (inverse) {
+            ratio = 1. - ratio;
+        }
+
+        return (exp(ratio) - 1.) / (Math.E - 1.) * (end - begin) + begin;
     }
 
     private void updateProcessingLabels() {
