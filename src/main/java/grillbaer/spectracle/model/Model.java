@@ -46,14 +46,19 @@ public final class Model {
     @Getter(AccessLevel.NONE)
     private final Map<Integer, Spectrum> sensitivityCalibrationByCameraId = new TreeMap<>();
 
+    private double sampleRowPosRatio = 0.5;
+    private int sampleRows = 10;
+    private double timeAveragingFactor = 0.;
+    private double smoothIndexSteps = 0;
     private boolean normalizeSampleValues;
+
     private final Observers<Boolean> normalizeSampleValuesObservers = new Observers<>();
     /**
      * Spectrum as it came from the last camera frame.
      */
     private Spectrum rawSpectrum;
     /**
-     * Spectrum with some averaging and noise removal.
+     * Spectrum with quality improvements like time averaging and noise removal.
      */
     private Spectrum purifiedSpectrum;
     /**
@@ -62,11 +67,6 @@ public final class Model {
     private Spectrum spectrum;
     private final Observers<Spectrum> spectrumObservers = new Observers<>();
 
-    private double sampleRowPosRatio = 0.5;
-    private int sampleRows = 10;
-    private double timeAveragingFactor = 0.;
-    private double smoothIndexSteps = 0;
-
     private Map<String, String> lastUsedDirectories = new HashMap<>();
 
     public Model() {
@@ -74,6 +74,9 @@ public final class Model {
     }
 
     private void updateSampleLineFromGrabbedFrame() {
+        if (this.currentFrame == null)
+            return;
+
         setRawSampleLine(
                 Sampling.sampleLineFromMat(this.currentFrame.getMat(),
                         (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
@@ -134,10 +137,14 @@ public final class Model {
         setCurrentFrame(this.grabbingFrame);
     }
 
-    private void setCurrentFrame(@NonNull Frame newlyGrabbedFrame) {
+    public void setCurrentFrame(@NonNull Frame newlyGrabbedFrame) {
         this.grabbingFrame = this.currentFrame;
         this.currentFrame = newlyGrabbedFrame;
         this.frameGrabbedObservers.fire(this.currentFrame);
+    }
+
+    public void clearCurrentFrame() {
+        setCurrentFrame(new Frame());
     }
 
     public CameraProps getCameraProps(Integer cameraId) {
@@ -225,7 +232,7 @@ public final class Model {
         }
     }
 
-    private void setSensitivityCalibration(Spectrum sensitivityCalibration) {
+    public void setSensitivityCalibration(Spectrum sensitivityCalibration) {
         if (getCameraId() != null) {
             setSensitivityCalibration(getCameraId(), sensitivityCalibration);
         }
@@ -290,39 +297,6 @@ public final class Model {
     private void recalcSampleLineFromRaw() {
         if (this.rawSpectrum != null) {
             setRawSampleLine(this.rawSpectrum.getSampleLine());
-        }
-    }
-
-    /**
-     * Calculate and set a new sensitivity correction spectrum by comparing the current (uncorrected)
-     * spectrum obtained from the camera with the passed reference light source's idealized spectrum.
-     */
-    //FIXME move calibration calculation to Calculations
-    public void calibrateSensitivityWithReferenceLight(@NonNull Spectrum referenceLightSpectrum) {
-        if (this.rawSpectrum != null) {
-            final var measuredSpectrum = Spectrum.create(
-                    Calculations.gaussianSmooth(this.rawSpectrum.getSampleLine(), 5),
-                    this.rawSpectrum.getCalibration());
-
-            final var correctionFactors = new double[measuredSpectrum.getLength()];
-            double maxCorrectionFactorInCalRange = 0.;
-            for (int i = 0; i < measuredSpectrum.getLength(); i++) {
-                final var nanoMeters = measuredSpectrum.getNanoMetersAtIndex(i);
-                final var rawValue = measuredSpectrum.getValueAtIndex(i);
-                final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
-                correctionFactors[i] = targetValue / rawValue;
-                if (nanoMeters >= 400. && nanoMeters <= 700 && maxCorrectionFactorInCalRange < correctionFactors[i]) {
-                    maxCorrectionFactorInCalRange = correctionFactors[i];
-                }
-            }
-
-            for (int i = 0; i < correctionFactors.length; i++) {
-                correctionFactors[i] = Math.min(1., correctionFactors[i] / maxCorrectionFactorInCalRange);
-            }
-
-            final var sensitivityCalibration =
-                    Spectrum.create(SampleLine.create(correctionFactors), this.rawSpectrum.getCalibration());
-            setSensitivityCalibration(sensitivityCalibration);
         }
     }
 

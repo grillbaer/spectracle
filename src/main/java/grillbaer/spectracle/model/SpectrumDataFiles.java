@@ -3,17 +3,56 @@ package grillbaer.spectracle.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import grillbaer.spectracle.Context;
 import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
+import grillbaer.spectracle.ui.components.Dialogs;
+import javafx.stage.FileChooser;
 import lombok.*;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
+/**
+ * File storage of spectrum data.
+ */
 public final class SpectrumDataFiles {
+
+    public static final FileChooser.ExtensionFilter EXTENSION_FILTER_CSV =
+            new FileChooser.ExtensionFilter("Comma Separated Values", "*.csv");
+    public static final String CONTENT_NAME = "Spectrum Data";
+
+    public void promptAndSaveFile(@NonNull Context context, JComponent parentComponent) {
+        final var file = Dialogs.showSaveFileDialog(context, parentComponent,
+                CONTENT_NAME, List.of(EXTENSION_FILTER_CSV), null);
+        if (file != null) {
+            try {
+                writeCsvFile(context.getModel().getRawSpectrum(), context.getModel().getSpectrum(), file);
+            } catch (Exception e) {
+                Dialogs.showErrorDialog(parentComponent, "Saving CSV to " + file + "failed.", e.getMessage());
+            }
+        }
+    }
+
+    public void promptAndLoadFile(@NonNull Context context, JComponent parentComponent) {
+        final var file = Dialogs.showOpenFileDialog(context, parentComponent,
+                CONTENT_NAME, List.of(EXTENSION_FILTER_CSV), null);
+        if (file != null) {
+            try {
+                final var spectra = new SpectrumDataFiles().readCsvFile(file);
+                context.getModel().clearCurrentFrame();
+                context.getModel().setRawSampleLine(spectra.getRaw().getSampleLine());
+            } catch (Exception e) {
+                Dialogs.showErrorDialog(parentComponent, "Loading CSV from " + file + "failed.", e.getMessage());
+            }
+        }
+    }
+
     public void writeCsvFile(@NonNull Spectrum rawSpectrum, Spectrum processedSpectrum,
                              @NonNull Path targetFile) throws IOException {
 

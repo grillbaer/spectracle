@@ -21,9 +21,9 @@ public final class Calculations {
     }
 
     /**
-     * Calibrates a spectrum by applying the wavelength dependent factors from a sensitivity calibraiton profile.
+     * Calibrate a spectrum by applying the wavelength dependent factors from a sensitivity calibration profile.
      */
-    public static Spectrum calibrateSensitivity(@NonNull Spectrum spectrum, @NonNull Spectrum sensitivityCalibration) {
+    public static Spectrum applySensitivityCalibration(@NonNull Spectrum spectrum, @NonNull Spectrum sensitivityCalibration) {
         var newValues = spectrum.getSampleLine().getCopyOfValues();
         for (int i = 0; i < newValues.length; i++) {
             final var nanoMeters = spectrum.getNanoMetersAtIndex(i);
@@ -36,7 +36,43 @@ public final class Calculations {
     }
 
     /**
-     * Normalizes the values of the sample line so that the maximum value will be 1.0.
+     * Calculate a spectrum of sensitivity correction factors by comparing a measured spectrum obtained from the camera
+     * with a reference light source's idealized spectrum.
+     */
+    public static Spectrum calcSensitivityCalibration(@NonNull Spectrum cameraSpectrum, @NonNull Spectrum referenceLightSpectrum,
+                                                      double calBeginNanos, double calEndNanos) {
+
+        final var length = cameraSpectrum.getLength();
+        final var calBeginIndex = cameraSpectrum.getCalibration().nanoMetersToNextIndex(length, calBeginNanos);
+        final var calEndIndex = cameraSpectrum.getCalibration().nanoMetersToNextIndex(length, calEndNanos);
+
+        final var correctionFactors = new double[length];
+        double maxCorrectionFactorInCalRange = 0.;
+        for (int i = 0; i < length; i++) {
+            final var nanoMeters = cameraSpectrum.getNanoMetersAtIndex(i);
+            final var cameraValue = cameraSpectrum.getValueAtIndex(i);
+            final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
+            correctionFactors[i] = Math.max(0.01, targetValue / cameraValue);
+            if (calBeginIndex <= i && i <= calEndIndex && maxCorrectionFactorInCalRange < correctionFactors[i]) {
+                maxCorrectionFactorInCalRange = correctionFactors[i];
+            }
+        }
+
+        for (int i = calBeginIndex; i <= calEndIndex; i++) {
+            correctionFactors[i] = Math.min(1., correctionFactors[i] / maxCorrectionFactorInCalRange);
+        }
+        for (int i = 0; i < calBeginIndex; i++) {
+            correctionFactors[i] = correctionFactors[calBeginIndex];
+        }
+        for (int i = calEndIndex + 1; i < length; i++) {
+            correctionFactors[i] = correctionFactors[calEndIndex];
+        }
+
+        return Spectrum.create(SampleLine.create(correctionFactors), cameraSpectrum.getCalibration());
+    }
+
+    /**
+     * Normalize the values of the sample line so that the maximum value will be 1.0.
      * If the whole sample contains only values <= 0.0, it will not be changed.
      */
     public static SampleLine normalize(@NonNull SampleLine input) {

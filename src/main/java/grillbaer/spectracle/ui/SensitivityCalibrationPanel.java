@@ -1,6 +1,7 @@
 package grillbaer.spectracle.ui;
 
 import grillbaer.spectracle.Context;
+import grillbaer.spectracle.spectrum.Calculations;
 import grillbaer.spectracle.spectrum.KnownSpectrums;
 import grillbaer.spectracle.spectrum.Spectrum;
 import grillbaer.spectracle.ui.components.Buttons;
@@ -108,8 +109,11 @@ public class SensitivityCalibrationPanel {
     private void applyCalibration() {
         this.active = false;
 
-        if (this.referenceLightSpectrum != null) {
-            this.context.getModel().calibrateSensitivityWithReferenceLight(this.referenceLightSpectrum);
+        final var purifiedSpectrum = this.context.getModel().getPurifiedSpectrum();
+        if (this.referenceLightSpectrum != null && purifiedSpectrum != null) {
+            this.context.getModel().setSensitivityCalibration(
+                    Calculations.calcSensitivityCalibration(purifiedSpectrum, this.referenceLightSpectrum,
+                            400., 700.));
         }
 
         updateForCalibration();

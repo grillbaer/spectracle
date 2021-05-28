@@ -5,14 +5,11 @@ import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.model.SpectrumDataFiles;
 import grillbaer.spectracle.ui.components.CameraView;
-import grillbaer.spectracle.ui.components.Dialogs;
 import grillbaer.spectracle.ui.components.SpectrumReproductionView;
-import javafx.stage.FileChooser;
 import lombok.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class CameraPanel {
     private final Context context;
@@ -106,31 +103,12 @@ public class CameraPanel {
     }
 
     private void saveData() {
-        final var file = Dialogs.showSaveFileDialog(this.context, getComponent(), "Spectrum Data",
-                List.of(new FileChooser.ExtensionFilter("Comma Separated Values", "*.csv")), null);
-        if (file != null) {
-            try {
-                new SpectrumDataFiles().writeCsvFile(this.context.getModel().getRawSpectrum(), this.context.getModel()
-                        .getSpectrum(), file);
-            } catch (Exception e) {
-                Dialogs.showErrorDialog(getComponent(), "Saving CSV to " + file + "failed.", e.getMessage());
-            }
-        }
+        new SpectrumDataFiles().promptAndSaveFile(this.context, getComponent());
     }
 
     private void loadData() {
-        final var file = Dialogs.showOpenFileDialog(this.context, getComponent(), "Spectrum Data",
-                List.of(new FileChooser.ExtensionFilter("Comma Separated Values", "*.csv")), null);
-        if (file != null) {
-            try {
-                final var spectra = new SpectrumDataFiles().readCsvFile(file);
-                this.context.getModel().setRawSampleLine(spectra.getRaw().getSampleLine());
-            } catch (Exception e) {
-                Dialogs.showErrorDialog(getComponent(), "Loading CSV from " + file + "failed.", e.getMessage());
-            }
-        }
+        new SpectrumDataFiles().promptAndLoadFile(this.context, getComponent());
     }
-
 
     private void playPausedToPanel(boolean paused) {
         this.playPauseButton.setText(paused ? "▶ Play" : "⏹ Stop");
