@@ -1,7 +1,8 @@
 package grillbaer.spectracle.ui.components;
 
+import grillbaer.spectracle.spectrum.Calculations;
+import grillbaer.spectracle.spectrum.Calculations.Extremum;
 import grillbaer.spectracle.spectrum.Formatting;
-import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
 import lombok.NonNull;
 
@@ -105,19 +106,20 @@ public class SpectrumGraphView extends SpectralXView {
         }
     }
 
+    //FIXME: move extrema calculation to model
     private void drawExtrema(Graphics2D g2) {
-        final var extrema = this.spectrum.getSampleLine().findLocalExtrema(2, 15);
+        final var extrema = Calculations.findLocalExtrema(this.spectrum.getSampleLine(), 1.5, 15);
         final var maxima = extrema.stream()
                 .filter(e -> e.getLevel() > 0)
-                .sorted(Comparator.comparing(SampleLine.Extremum::getLevel).reversed())
+                .sorted(Comparator.comparing(Extremum::getLevel).reversed())
                 .limit(20)
                 .collect(Collectors.toList());
         final var minima = extrema.stream()
                 .filter(e -> e.getLevel() < 0)
-                .sorted(Comparator.comparing(SampleLine.Extremum::getLevel))
+                .sorted(Comparator.comparing(Extremum::getLevel))
                 .limit(20)
                 .collect(Collectors.toList());
-        for (SampleLine.Extremum extremum : maxima) {
+        for (Extremum extremum : maxima) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(extremum.getIndex());
             final int x = (int) waveLengthToX(nanoMeters);
             final int y = (int) valueToY(this.spectrum.getValueAtIndex(extremum.getIndex()));

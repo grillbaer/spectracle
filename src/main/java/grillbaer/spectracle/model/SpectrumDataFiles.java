@@ -52,8 +52,8 @@ public final class SpectrumDataFiles {
                     .map(DataPoint::getIntensityProcessed).filter(Objects::nonNull)
                     .mapToDouble(v -> v).toArray();
 
-            return new Spectra(Spectrum.create(new SampleLine(raw), calibration),
-                    processed.length == raw.length ? Spectrum.create(new SampleLine(processed), calibration) : null);
+            return new Spectra(Spectrum.create(SampleLine.create(raw), calibration),
+                    processed.length == raw.length ? Spectrum.create(SampleLine.create(processed), calibration) : null);
         }
     }
 

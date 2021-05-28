@@ -4,17 +4,18 @@ import grillbaer.spectracle.camera.Camera;
 import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.camera.Frame;
 import grillbaer.spectracle.model.Settings.SensitivityCalibration;
-import grillbaer.spectracle.spectrum.SampleLine;
-import grillbaer.spectracle.spectrum.Spectrum;
-import grillbaer.spectracle.spectrum.WaveLengthCalibration;
+import grillbaer.spectracle.spectrum.*;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
 import javax.swing.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -74,9 +75,9 @@ public final class Model {
 
     private void updateSampleLineFromGrabbedFrame() {
         setRawSampleLine(
-                new SampleLine(this.currentFrame.getMat(),
+                Sampling.sampleLineFromMat(this.currentFrame.getMat(),
                         (int) (this.currentFrame.getMat().rows() * getSampleRowPosRatio()),
-                        getSampleRows(), SampleLine.PIXEL_CHANNEL_AVERAGE));
+                        getSampleRows(), Sampling.PIXEL_CHANNEL_AVERAGE));
     }
 
     /**
@@ -233,13 +234,8 @@ public final class Model {
     public void setRawSampleLine(SampleLine rawSampleLine) {
         if (rawSampleLine != null) {
             this.rawSpectrum = Spectrum.create(rawSampleLine, getWaveLengthCalibration());
-            updatePurifiedSpectrumFromRaw();
-            updateProcessedSpectrumFromPurified();
-            System.out.format("%.04f %.04f %.04f\n",
-                    this.rawSpectrum.getValueAtIndex(500),
-                    this.purifiedSpectrum.getValueAtIndex(500),
-                    this.spectrum.getValueAtIndex(500)
-            );
+            this.purifiedSpectrum = calcPurifiedSpectrum(this.rawSpectrum, this.purifiedSpectrum, this.timeAveragingFactor);
+            this.spectrum = calcProcessedSpectrum(this.purifiedSpectrum, this.smoothIndexSteps, this.normalizeSampleValues);
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
             this.rawSpectrum = null;
@@ -247,6 +243,26 @@ public final class Model {
             this.spectrum = null;
             this.spectrumObservers.fire(null);
         }
+    }
+
+    private static Spectrum calcPurifiedSpectrum(Spectrum rawSpectrum, Spectrum purifiedSpectrum, double timeAveragingFactor) {
+        if (rawSpectrum == null)
+            return null;
+
+        final var purifiedSampleLine = purifiedSpectrum != null ? purifiedSpectrum.getSampleLine() : null;
+
+        return Spectrum.create(Calculations.timeAverage(rawSpectrum.getSampleLine(), purifiedSampleLine, timeAveragingFactor), rawSpectrum
+                .getCalibration());
+    }
+
+    private static Spectrum calcProcessedSpectrum(Spectrum purifiedSpectrum, double smoothIndexSteps, boolean normalizeSampleValues) {
+        if (purifiedSpectrum == null)
+            return null;
+
+        final SampleLine smoothed = Calculations.gaussianSmooth(purifiedSpectrum.getSampleLine(), smoothIndexSteps);
+        final SampleLine normalized = normalizeSampleValues ? Calculations.normalize(smoothed) : smoothed;
+
+        return Spectrum.create(normalized, purifiedSpectrum.getCalibration());
     }
 
     public void setNormalizeSampleValues(boolean normalize) {
@@ -277,65 +293,15 @@ public final class Model {
         }
     }
 
-    private void updatePurifiedSpectrumFromRaw() {
-        if (this.rawSpectrum == null)
-            return;
-
-        if (this.purifiedSpectrum == null
-                || this.purifiedSpectrum.getLength() != this.rawSpectrum.getLength()) {
-            this.purifiedSpectrum = this.rawSpectrum;
-            return;
-        }
-
-        final var purified = this.purifiedSpectrum.getSampleLine().getValues();
-        for (int i = 0; i < purified.length; i++) {
-            final var oldValue = purified[i];
-            final var newValue = this.rawSpectrum.getValueAtIndex(i);
-            final var oldShare = this.timeAveragingFactor;
-            purified[i] = oldValue * oldShare + newValue * (1. - oldShare);
-        }
-
-        this.purifiedSpectrum = Spectrum.create(
-                new SampleLine(purified, this.rawSpectrum.getSampleLine().getOverExposed()),
-                this.rawSpectrum.getCalibration());
-    }
-
-    private void updateProcessedSpectrumFromPurified() {
-        final var sensitivityCalibration = getSensitivityCalibration();
-        var result = new double[this.purifiedSpectrum.getLength()];
-        for (int i = 0; i < result.length; i++) {
-            final var nanoMeters = this.purifiedSpectrum.getNanoMetersAtIndex(i);
-            final var calibrationFactor =
-                    sensitivityCalibration != null ? sensitivityCalibration.getValueAtNanoMeters(nanoMeters) : 1.;
-            result[i] = this.purifiedSpectrum.getValueAtIndex(i) * calibrationFactor;
-        }
-
-        if (this.smoothIndexSteps > 0) {
-            result = new SampleLine(result).withGaussianSmooth(this.smoothIndexSteps).getValues();
-        }
-
-        if (this.normalizeSampleValues) {
-            final var maxValue = Arrays.stream(result).max().getAsDouble();
-            if (maxValue > 0.) {
-                for (int i = 0; i < result.length; i++) {
-                    result[i] /= maxValue;
-                }
-            }
-        }
-
-        this.spectrum = Spectrum.create(
-                new SampleLine(result, this.purifiedSpectrum.getSampleLine().getOverExposed()),
-                this.purifiedSpectrum.getCalibration());
-    }
-
     /**
      * Calculate and set a new sensitivity correction spectrum by comparing the current (uncorrected)
      * spectrum obtained from the camera with the passed reference light source's idealized spectrum.
      */
+    //FIXME move calibration calculation to Calculations
     public void calibrateSensitivityWithReferenceLight(@NonNull Spectrum referenceLightSpectrum) {
         if (this.rawSpectrum != null) {
             final var measuredSpectrum = Spectrum.create(
-                    this.rawSpectrum.getSampleLine().withGaussianSmooth(5),
+                    Calculations.gaussianSmooth(this.rawSpectrum.getSampleLine(), 5),
                     this.rawSpectrum.getCalibration());
 
             final var correctionFactors = new double[measuredSpectrum.getLength()];
@@ -355,7 +321,7 @@ public final class Model {
             }
 
             final var sensitivityCalibration =
-                    Spectrum.create(new SampleLine(correctionFactors), this.rawSpectrum.getCalibration());
+                    Spectrum.create(SampleLine.create(correctionFactors), this.rawSpectrum.getCalibration());
             setSensitivityCalibration(sensitivityCalibration);
         }
     }
@@ -388,7 +354,7 @@ public final class Model {
             settings.getOrCreateCamera(entry.getKey()).setSensitivityCalibration(
                     new SensitivityCalibration(correctionFactors.getCalibration().getBeginNanoMeters(),
                             correctionFactors.getCalibration().getEndNanoMeters(),
-                            correctionFactors.getSampleLine().getValues()));
+                            correctionFactors.getSampleLine().getCopyOfValues()));
         }
 
         settings.setLastUsedDirectories(this.lastUsedDirectories);
@@ -412,7 +378,7 @@ public final class Model {
                                 new WaveLengthPoint(0.0, sensCal.getBeginNanoMeters()),
                                 new WaveLengthPoint(1.0, sensCal.getEndNanoMeters()));
                 setSensitivityCalibration(cameraSettings.getId(),
-                        Spectrum.create(new SampleLine(corrFactors), wlCal));
+                        Spectrum.create(SampleLine.create(corrFactors), wlCal));
             }
         }
 

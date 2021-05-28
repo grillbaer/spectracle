@@ -72,7 +72,7 @@ public class KnownSpectrums {
             values[i] /= maxValue; // NOSONAR: maxValue will not be zero
         }
 
-        return Spectrum.create(new SampleLine(values), calibration);
+        return Spectrum.create(SampleLine.create(values), calibration);
     }
 
     public static List<NamedWaveLength> getCommonWaveLengths() {
