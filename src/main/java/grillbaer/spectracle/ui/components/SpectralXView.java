@@ -111,7 +111,7 @@ public abstract class SpectralXView extends JComponent {
             updateViewArea();
             final var g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
             drawView(g2);
         }
@@ -197,7 +197,7 @@ public abstract class SpectralXView extends JComponent {
         cursor.draw(g2, x, y0, x, y1, labelBounds);
     }
 
-    private void moveDownOnCollision(List<Rectangle> collisionAreas, Rectangle rect) {
+    protected void moveDownOnCollision(List<Rectangle> collisionAreas, Rectangle rect) {
         // This kind of collision detection may have O(n^3) depending on the number of cursors n,
         // but since usually only one or two passes are needed, O(n^2) will be reached in practice
         // and the number of cursors is small enough.
@@ -207,6 +207,22 @@ public abstract class SpectralXView extends JComponent {
             for (Rectangle avoidArea : collisionAreas) {
                 if (avoidArea.intersects(rect)) {
                     rect.y = avoidArea.y + avoidArea.height;
+                    collision = true;
+                }
+            }
+        }
+    }
+
+    protected void moveLeftOnCollision(List<Rectangle> collisionAreas, Rectangle rect) {
+        // This kind of collision detection may have O(n^3) depending on the number of cursors n,
+        // but since usually only one or two passes are needed, O(n^2) will be reached in practice
+        // and the number of cursors is small enough.
+        boolean collision = true;
+        while (collision) {
+            collision = false;
+            for (Rectangle avoidArea : collisionAreas) {
+                if (avoidArea.intersects(rect)) {
+                    rect.x = avoidArea.x - rect.width;
                     collision = true;
                 }
             }

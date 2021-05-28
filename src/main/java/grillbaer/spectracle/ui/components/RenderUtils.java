@@ -51,7 +51,7 @@ public final class RenderUtils {
     }
 
     public enum Effect {
-        PLAIN, SURROUNDED, SHADOW
+        PLAIN, SURROUNDED, SHADOW, BACKGROUND
     }
 
     private RenderUtils() {
@@ -62,11 +62,11 @@ public final class RenderUtils {
      * Draw a text into a bounding box in the desired direction and align it as desired.
      * Does not support HTML, but has come effects.
      */
-    public static void drawText(@NonNull Graphics2D g2, String text, @NonNull Rectangle box,
-                                @NonNull Alignment alignment, @NonNull Direction direction,
-                                boolean clipToBox, boolean skipIfOutsideBox, @NonNull Effect effect) {
+    public static Rectangle drawText(@NonNull Graphics2D g2, String text, @NonNull Rectangle box,
+                                     @NonNull Alignment alignment, @NonNull Direction direction,
+                                     boolean clipToBox, boolean skipIfOutsideBox, @NonNull Effect effect) {
         if (text == null)
-            return;
+            return null;
 
         // bounding box around text
         final var fm = g2.getFontMetrics();
@@ -76,7 +76,7 @@ public final class RenderUtils {
         final var height = direction.isHorizontal() ? textHeight : textWidth;
 
         if (skipIfOutsideBox && (width > box.width || height > box.height))
-            return;
+            return null;
 
         // calc text reference point
         int right = 0;
@@ -111,6 +111,9 @@ public final class RenderUtils {
         x += right;
         y -= up;
 
+        final var textRect = new Rectangle(x, y - height, width, height);
+        textRect.grow(fm.getHeight() / 5, 1);
+
         final var originalClip = g2.getClipBounds();
         if (clipToBox) {
             g2.clipRect(box.x, box.y, box.width, box.height);
@@ -120,24 +123,32 @@ public final class RenderUtils {
         if (effect == Effect.PLAIN) {
             drawAngleString(g2, text, x, y, clockwiseRadAngle);
         } else if (effect == Effect.SURROUNDED) {
-            final var oldPaint = g2.getPaint();
+            final var origPaint = g2.getPaint();
             g2.setPaint(g2.getBackground());
             for (int dx = -1; dx <= 1; dx += 1) {
                 for (int dy = -1; dy <= 1; dy += 1) {
                     drawAngleString(g2, text, x + dx, y + dy, clockwiseRadAngle);
                 }
             }
-            g2.setPaint(oldPaint);
+            g2.setPaint(origPaint);
             drawAngleString(g2, text, x, y, clockwiseRadAngle);
         } else if (effect == Effect.SHADOW) {
-            final var oldPaint = g2.getPaint();
+            final var origPaint = g2.getPaint();
             g2.setPaint(g2.getBackground());
             drawAngleString(g2, text, x + 1, y + 1, clockwiseRadAngle);
-            g2.setPaint(oldPaint);
+            g2.setPaint(origPaint);
+            drawAngleString(g2, text, x, y, clockwiseRadAngle);
+        } else if (effect == Effect.BACKGROUND) {
+            final var origPaint = g2.getPaint();
+            g2.setPaint(g2.getBackground());
+            g2.fillRoundRect(textRect.x, textRect.y, textRect.width, textRect.height, 4, 4);
+            g2.setPaint(origPaint);
             drawAngleString(g2, text, x, y, clockwiseRadAngle);
         }
 
         g2.setClip(originalClip);
+
+        return textRect;
     }
 
 
@@ -166,9 +177,9 @@ public final class RenderUtils {
     /**
      * Render a string into a rectangle, render it as HTML if it starts with "&lt;html>", as plain text otherwise.
      */
-    public static void drawHtml(@NonNull Graphics2D g2, String text, @NonNull Rectangle box,
-                                @NonNull Alignment alignment, @NonNull Direction direction,
-                                boolean clipToBox, boolean skipIfOutsideBox) {
+    public static Rectangle drawHtml(@NonNull Graphics2D g2, String text, @NonNull Rectangle box,
+                                     @NonNull Alignment alignment, @NonNull Direction direction,
+                                     boolean clipToBox, boolean skipIfOutsideBox) {
         if (BasicHTML.isHTMLString(text)) {
 
             g2 = (Graphics2D) g2.create();
@@ -188,7 +199,7 @@ public final class RenderUtils {
             final var height = direction.isHorizontal() ? textHeight : textWidth;
 
             if (skipIfOutsideBox && (width > box.width || height > box.height))
-                return;
+                return null;
 
             // calc text reference point
             int right = 0;
@@ -223,6 +234,9 @@ public final class RenderUtils {
             x += right;
             y += up;
 
+            final var textRect = new Rectangle(x, y - height, width, height);
+            textRect.grow(g2.getFont().getSize() / 5, 1);
+
             final var originalClip = g2.getClipBounds();
             if (clipToBox) {
                 g2.clipRect(box.x, box.y, box.width, box.height);
@@ -236,9 +250,13 @@ public final class RenderUtils {
 
             g2.setClip(originalClip);
 
+            return textRect;
+
         } else if (text != null) {
-            drawText(g2, text, box, alignment, direction, clipToBox, skipIfOutsideBox, Effect.PLAIN);
+            return drawText(g2, text, box, alignment, direction, clipToBox, skipIfOutsideBox, Effect.PLAIN);
         }
+
+        return null;
     }
 
     /**

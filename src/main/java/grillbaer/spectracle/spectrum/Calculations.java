@@ -10,6 +10,7 @@ import java.util.List;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Comparator.comparing;
 
 /**
  * Calculations on spectra and sample line vectors.
@@ -141,26 +142,46 @@ public final class Calculations {
 
     /**
      * Find local minimums and maximums in a sample line.
+     * The extrema are returned in descending level order.
      */
-    public static List<Extremum> findLocalExtrema(@NonNull SampleLine input, double noiseSigmaIndexSteps, double baseSigmaIndexSteps) {
+    public static Extrema findLocalExtrema(@NonNull SampleLine input, double noiseSigmaIndexSteps, double baseSigmaIndexSteps, int maxMinima, int maxMaxima) {
         final var denoised = gaussianSmooth(input, noiseSigmaIndexSteps);
-        final var baseLevel = gaussianSmooth(input, baseSigmaIndexSteps);
-        final var delta = new double[input.getLength()];
-        for (int i = 0; i < delta.length; i++) {
-            delta[i] = denoised.getValue(i) - baseLevel.getValue(i);
-        }
+        //TODO: cover more base level widths to find narrow and broad peaks, multi-scale search
+        final var baseLevelNarrow = gaussianSmooth(input, baseSigmaIndexSteps);
+        final var baseLevelWide = gaussianSmooth(input, baseSigmaIndexSteps * 5.);
+        final var levelFactor = 100.;
+        final var levelLimit = 0.3;
 
-        final var extrema = new ArrayList<Extremum>();
-        for (int i = 1; i < delta.length - 1; i++) {
-            if ((denoised.getValue(i - 1) < denoised.getValue(i) && denoised.getValue(i) > denoised.getValue(i + 1))
-                    || (denoised.getValue(i - 1) > denoised.getValue(i) && denoised.getValue(i) < denoised.getValue(i + 1))) {
-                int fineIndex = input.getValue(i) > input.getValue(i - 1) ? i : i - 1;
-                fineIndex = input.getValue(fineIndex) > input.getValue(i + 1) ? i : i + 1;
-                extrema.add(new Extremum(fineIndex, 100 * delta[i]));
+        final var minima = new ArrayList<Extremum>();
+        final var maxima = new ArrayList<Extremum>();
+
+        for (int i = 1; i < denoised.getLength() - 1; i++) {
+            if (denoised.getValue(i - 1) < denoised.getValue(i) && denoised.getValue(i) > denoised.getValue(i + 1)) {
+                final var level = levelFactor *
+                        max(denoised.getValue(i) - baseLevelNarrow.getValue(i), denoised.getValue(i) - baseLevelWide.getValue(i));
+                if (level >= levelLimit) {
+                    maxima.add(new Extremum(i, level));
+                }
+            }
+            if (denoised.getValue(i - 1) > denoised.getValue(i) && denoised.getValue(i) < denoised.getValue(i + 1)) {
+                final var level = levelFactor *
+                        min(denoised.getValue(i) - baseLevelNarrow.getValue(i), denoised.getValue(i) - baseLevelWide.getValue(i));
+                if (level <= -levelLimit) {
+                    minima.add(new Extremum(i, level));
+                }
             }
         }
 
-        return extrema;
+        return new Extrema(
+                minima.stream().sorted(comparing(Extremum::getLevel)).limit(maxMinima).toList(),
+                maxima.stream().sorted(comparing(Extremum::getLevel).reversed()).limit(maxMaxima).toList());
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class Extrema {
+        private final List<Extremum> minima;
+        private final List<Extremum> maxima;
     }
 
     @AllArgsConstructor
@@ -168,5 +189,13 @@ public final class Calculations {
     public static class Extremum {
         private final int index;
         private final double level;
+
+        public boolean isMinimum() {
+            return level < 0.;
+        }
+
+        public boolean isMaximum() {
+            return level > 0.;
+        }
     }
 }

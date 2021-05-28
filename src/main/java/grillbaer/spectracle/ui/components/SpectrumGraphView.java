@@ -7,9 +7,12 @@ import grillbaer.spectracle.spectrum.Spectrum;
 import lombok.NonNull;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
-import java.util.Comparator;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Comparator.comparing;
 
 /**
  * Spectrum visualization is XY graph.
@@ -27,9 +30,12 @@ public class SpectrumGraphView extends SpectralXView {
     private Spectrum referenceLightSpectrum;
     private Spectrum sensitivityCorrectionSpectrum;
 
+    private boolean drawMaxima;
+    private boolean drawMinima;
+
     public SpectrumGraphView() {
-        super(20);
-        setHeadRoomHeight(80);
+        super(35);
+        setHeadRoomHeight(90);
     }
 
     public void setSpectrum(Spectrum spectrum) {
@@ -45,6 +51,16 @@ public class SpectrumGraphView extends SpectralXView {
 
     public void setSensitivityCorrectionSpectrum(Spectrum spectrum) {
         this.sensitivityCorrectionSpectrum = spectrum;
+        repaint();
+    }
+
+    public void setDrawMaxima(boolean drawMaxima) {
+        this.drawMaxima = drawMaxima;
+        repaint();
+    }
+
+    public void setDrawMinima(boolean drawMinima) {
+        this.drawMinima = drawMinima;
         repaint();
     }
 
@@ -106,28 +122,75 @@ public class SpectrumGraphView extends SpectralXView {
         }
     }
 
-    //FIXME: move extrema calculation to model
     private void drawExtrema(Graphics2D g2) {
-        final var extrema = Calculations.findLocalExtrema(this.spectrum.getSampleLine(), 1.5, 15);
-        final var maxima = extrema.stream()
-                .filter(e -> e.getLevel() > 0)
-                .sorted(Comparator.comparing(Extremum::getLevel).reversed())
-                .limit(20)
-                .collect(Collectors.toList());
-        final var minima = extrema.stream()
-                .filter(e -> e.getLevel() < 0)
-                .sorted(Comparator.comparing(Extremum::getLevel))
-                .limit(20)
-                .collect(Collectors.toList());
-        for (Extremum extremum : maxima) {
-            final var nanoMeters = this.spectrum.getNanoMetersAtIndex(extremum.getIndex());
-            final int x = (int) waveLengthToX(nanoMeters);
-            final int y = (int) valueToY(this.spectrum.getValueAtIndex(extremum.getIndex()));
-            g2.setColor(new Color(170, 170, 170, 150));
-            g2.setBackground(Color.BLACK);
-            g2.fillRect(x, y, 1, 1);
-            RenderUtils.drawText(g2, Formatting.formatWaveLength(nanoMeters), new Rectangle(x, y - 20, 0, 20),
-                    RenderUtils.Alignment.CENTER, RenderUtils.Direction.RIGHT, false, false, RenderUtils.Effect.SHADOW);
+        if (!this.drawMaxima && !this.drawMinima)
+            return;
+
+        final var extrema = Calculations.findLocalExtrema(this.spectrum.getSampleLine(),
+                0.5, 1.5, 16, 16);
+
+        final var textRegions = new ArrayList<Rectangle>();
+        if (this.drawMaxima) {
+            extrema.getMaxima().stream().sorted(comparing(Extremum::getIndex).reversed())
+                    .forEach(e -> drawExtremum(g2, e, textRegions));
+        }
+        if (this.drawMinima) {
+            extrema.getMinima().stream().sorted(comparing(Extremum::getIndex).reversed())
+                    .forEach(e -> drawExtremum(g2, e, textRegions));
+        }
+    }
+
+    private void drawExtremum(Graphics2D g2, Extremum extremum, List<Rectangle> textRegions) {
+
+        final var nanoMeters = this.spectrum.getNanoMetersAtIndex(extremum.getIndex());
+        final int x = (int) Math.round(waveLengthToX(nanoMeters));
+        final int y = (int) Math.round(valueToY(this.spectrum.getValueAtIndex(extremum.getIndex())));
+        final var text = Formatting.formatWaveLength(nanoMeters);
+
+        // text dimensions with some padding
+        final var textDim = RenderUtils.calcTextDimension(g2, g2.getFont(), text);
+        textDim.width += 6;
+        textDim.height += 2;
+
+        final var textRect = new Rectangle(x + 16 - textDim.width / 2, y, textDim.width, textDim.height);
+        final RenderUtils.Alignment alignment;
+        if (extremum.isMaximum()) {
+            textRect.y = textRect.y - textDim.height - 20;
+            alignment = RenderUtils.Alignment.SOUTH;
+        } else {
+            textRect.y += 16;
+            alignment = RenderUtils.Alignment.NORTH;
+        }
+
+        if (textRegions != null) {
+            moveLeftOnCollision(textRegions, textRect);
+        }
+
+        final var origHints = g2.getRenderingHints();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        final var fg = new Color(230, 230, 230, 220);
+        final var bg = new Color(0, 0, 0, 120);
+
+        g2.setColor(fg);
+        g2.setBackground(bg);
+        final var drawnRect =
+                RenderUtils.drawText(g2, text, textRect, alignment, RenderUtils.Direction.RIGHT,
+                        false, false, RenderUtils.Effect.BACKGROUND);
+
+        final var line = new Line2D.Double(x, y,
+                textRect.getCenterX(),
+                (alignment == RenderUtils.Alignment.NORTH ? textRect.getMinY() + 1 : textRect.getMaxY() - 2));
+        g2.setColor(bg);
+        g2.setStroke(new BasicStroke(3f));
+        g2.draw(line);
+        g2.setColor(fg);
+        g2.setStroke(new BasicStroke());
+        g2.draw(line);
+
+        g2.setRenderingHints(origHints);
+
+        if (textRegions != null) {
+            textRegions.add(drawnRect);
         }
     }
 

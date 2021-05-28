@@ -47,6 +47,14 @@ public class SpectrumPanel {
         knownWaveLengthsComboBox.addActionListener(
                 e -> showKnownWaveLengths(((NamedWaveLengthGroup) knownWaveLengthsComboBox.getSelectedItem())));
 
+        final JToggleButton drawMaximaButton = new JToggleButton("⋀");
+        drawMaximaButton.addActionListener(e -> this.spectrumGraphView.setDrawMaxima(drawMaximaButton.isSelected()));
+        drawMaximaButton.setSelected(true);
+        this.spectrumGraphView.setDrawMaxima(true);
+
+        final JToggleButton drawMinimaButton = new JToggleButton("⋁");
+        drawMinimaButton.addActionListener(e -> this.spectrumGraphView.setDrawMinima(drawMinimaButton.isSelected()));
+
         final JSlider timeAverageSlider = new JSlider(HORIZONTAL, 0, 100, 0);
         this.timeAverageLabel = new JLabel();
         timeAverageSlider.addChangeListener(e -> {
@@ -65,6 +73,8 @@ public class SpectrumPanel {
         controlPanel.add(this.waveLengthCalibrationPanel.getComponent());
         controlPanel.add(this.sensitivityCalibrationPanel.getComponent());
         controlPanel.add(knownWaveLengthsComboBox);
+        controlPanel.add(drawMaximaButton);
+        controlPanel.add(drawMinimaButton);
         controlPanel.add(timeAverageSlider);
         controlPanel.add(this.timeAverageLabel);
         controlPanel.add(smoothSlider);
