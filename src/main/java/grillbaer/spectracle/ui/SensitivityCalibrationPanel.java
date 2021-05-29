@@ -113,7 +113,7 @@ public class SensitivityCalibrationPanel {
         if (this.referenceLightSpectrum != null && purifiedSpectrum != null) {
             this.context.getModel().setSensitivityCalibration(
                     Calculations.calcSensitivityCalibration(purifiedSpectrum, this.referenceLightSpectrum,
-                            400., 700.));
+                            380., 750.));
         }
 
         updateForCalibration();

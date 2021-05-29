@@ -48,11 +48,13 @@ public final class Calculations {
         final var calBeginIndex = cameraSpectrum.getCalibration().nanoMetersToNextIndex(length, calBeginNanos);
         final var calEndIndex = cameraSpectrum.getCalibration().nanoMetersToNextIndex(length, calEndNanos);
 
+        final var smoothedCameraSpectrum = Calculations.gaussianSmooth(cameraSpectrum.getSampleLine(), 3.0);
+
         final var correctionFactors = new double[length];
         double maxCorrectionFactorInCalRange = 0.;
         for (int i = 0; i < length; i++) {
             final var nanoMeters = cameraSpectrum.getNanoMetersAtIndex(i);
-            final var cameraValue = cameraSpectrum.getValueAtIndex(i);
+            final var cameraValue = smoothedCameraSpectrum.getValue(i);
             final var targetValue = referenceLightSpectrum.getValueAtNanoMeters(nanoMeters);
             correctionFactors[i] = Math.max(0.01, targetValue / cameraValue);
             if (calBeginIndex <= i && i <= calEndIndex && maxCorrectionFactorInCalRange < correctionFactors[i]) {

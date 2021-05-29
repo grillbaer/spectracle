@@ -249,7 +249,7 @@ public final class Model {
         if (rawSampleLine != null) {
             this.rawSpectrum = Spectrum.create(rawSampleLine, getWaveLengthCalibration());
             this.purifiedSpectrum = calcPurifiedSpectrum(this.rawSpectrum, this.purifiedSpectrum, this.timeAveragingFactor, this.peakHold);
-            this.spectrum = calcProcessedSpectrum(this.purifiedSpectrum, this.smoothIndexSteps, this.normalizeSampleValues);
+            this.spectrum = calcProcessedSpectrum(this.purifiedSpectrum, getSensitivityCalibration(), this.smoothIndexSteps, this.normalizeSampleValues);
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
             this.rawSpectrum = null;
@@ -270,11 +270,13 @@ public final class Model {
                 timeAveragingFactor, peakHold), rawSpectrum.getCalibration());
     }
 
-    private static Spectrum calcProcessedSpectrum(Spectrum purifiedSpectrum, double smoothIndexSteps, boolean normalizeSampleValues) {
+    private static Spectrum calcProcessedSpectrum(Spectrum purifiedSpectrum, Spectrum sensitivityCalibration, double smoothIndexSteps, boolean normalizeSampleValues) {
         if (purifiedSpectrum == null)
             return null;
 
-        final SampleLine smoothed = Calculations.gaussianSmooth(purifiedSpectrum.getSampleLine(), smoothIndexSteps);
+        final Spectrum calibrated = sensitivityCalibration != null
+                ? Calculations.applySensitivityCalibration(purifiedSpectrum, sensitivityCalibration) : purifiedSpectrum;
+        final SampleLine smoothed = Calculations.gaussianSmooth(calibrated.getSampleLine(), smoothIndexSteps);
         final SampleLine normalized = normalizeSampleValues ? Calculations.normalize(smoothed) : smoothed;
 
         return Spectrum.create(normalized, purifiedSpectrum.getCalibration());
