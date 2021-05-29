@@ -50,6 +50,7 @@ public final class Model {
     private double sampleRowPosRatio = 0.5;
     private int sampleRows = 10;
     private double timeAveragingFactor = 0.;
+    private boolean peakHold;
     private double smoothIndexSteps = 0;
 
     private boolean normalizeSampleValues;
@@ -247,7 +248,7 @@ public final class Model {
     public void setRawSampleLine(SampleLine rawSampleLine) {
         if (rawSampleLine != null) {
             this.rawSpectrum = Spectrum.create(rawSampleLine, getWaveLengthCalibration());
-            this.purifiedSpectrum = calcPurifiedSpectrum(this.rawSpectrum, this.purifiedSpectrum, this.timeAveragingFactor);
+            this.purifiedSpectrum = calcPurifiedSpectrum(this.rawSpectrum, this.purifiedSpectrum, this.timeAveragingFactor, this.peakHold);
             this.spectrum = calcProcessedSpectrum(this.purifiedSpectrum, this.smoothIndexSteps, this.normalizeSampleValues);
             this.spectrumObservers.fire(this.spectrum);
         } else if (this.spectrum != null) {
@@ -258,14 +259,15 @@ public final class Model {
         }
     }
 
-    private static Spectrum calcPurifiedSpectrum(Spectrum rawSpectrum, Spectrum purifiedSpectrum, double timeAveragingFactor) {
+    private static Spectrum calcPurifiedSpectrum(Spectrum rawSpectrum, Spectrum purifiedSpectrum,
+                                                 double timeAveragingFactor, boolean peakHold) {
         if (rawSpectrum == null)
             return null;
 
         final var purifiedSampleLine = purifiedSpectrum != null ? purifiedSpectrum.getSampleLine() : null;
 
-        return Spectrum.create(Calculations.timeAverage(rawSpectrum.getSampleLine(), purifiedSampleLine, timeAveragingFactor), rawSpectrum
-                .getCalibration());
+        return Spectrum.create(Calculations.timeAverage(rawSpectrum.getSampleLine(), purifiedSampleLine,
+                timeAveragingFactor, peakHold), rawSpectrum.getCalibration());
     }
 
     private static Spectrum calcProcessedSpectrum(Spectrum purifiedSpectrum, double smoothIndexSteps, boolean normalizeSampleValues) {
@@ -311,6 +313,13 @@ public final class Model {
     public void setTimeAveragingFactor(double timeAveragingFactor) {
         if (this.timeAveragingFactor != timeAveragingFactor) {
             this.timeAveragingFactor = timeAveragingFactor;
+            recalcSampleLineFromRaw();
+        }
+    }
+
+    public void setPeakHold(boolean peakHold) {
+        if (this.peakHold != peakHold) {
+            this.peakHold = peakHold;
             recalcSampleLineFromRaw();
         }
     }

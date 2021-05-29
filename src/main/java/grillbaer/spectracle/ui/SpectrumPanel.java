@@ -59,8 +59,15 @@ public class SpectrumPanel {
         final JSlider timeAverageSlider = new JSlider(HORIZONTAL, 0, 100, 0);
         this.timeAverageLabel = new JLabel();
         timeAverageSlider.addChangeListener(e -> {
-            this.context.getModel().setTimeAveragingFactor(getExpSliderValue(timeAverageSlider, 0.95, 0., true));
+            this.context.getModel().setTimeAveragingFactor(getExpSliderValue(timeAverageSlider, 1., 0., true));
             updateProcessingLabels();
+        });
+
+        final JToggleButton peakHoldButton = new JToggleButton("\uD83D\uDCCC");
+        peakHoldButton.addActionListener(e -> {
+            final var peakHold = peakHoldButton.isSelected();
+            this.context.getModel().setPeakHold(peakHold);
+            timeAverageSlider.setValue(peakHold ? timeAverageSlider.getMaximum() : timeAverageSlider.getMinimum());
         });
 
         final JSlider smoothSlider = new JSlider(HORIZONTAL, 0, 100, 0);
@@ -78,6 +85,7 @@ public class SpectrumPanel {
         controlPanel.add(drawMinimaButton);
         controlPanel.add(timeAverageSlider);
         controlPanel.add(this.timeAverageLabel);
+        controlPanel.add(peakHoldButton);
         controlPanel.add(smoothSlider);
         controlPanel.add(this.smoothLabel);
 

@@ -97,8 +97,10 @@ public final class Calculations {
      * @param newSample           new sample line to take into calculation
      * @param lastAveragedSample  previous averaged sample line
      * @param timeAveragingFactor Ratio between 0.0 and 1.0 that determines the share to use from the previous sample line. 0.0 does no time averaging at all and uses the new sample only. 1.0 only takes the previos sample and does not use the new sample at all.
+     * @param peakHold            hold peaks, i.e. immediately take new peaks, decay with time averaging if new values are below
      */
-    public static SampleLine timeAverage(@NonNull SampleLine newSample, SampleLine lastAveragedSample, double timeAveragingFactor) {
+    public static SampleLine timeAverage(@NonNull SampleLine newSample, SampleLine lastAveragedSample,
+                                         double timeAveragingFactor, boolean peakHold) {
         if (lastAveragedSample == null
                 || lastAveragedSample.getLength() != newSample.getLength()) {
             return newSample;
@@ -108,7 +110,11 @@ public final class Calculations {
         for (int i = 0; i < newAveraged.length; i++) {
             final var oldValue = newAveraged[i];
             final var newValue = newSample.getValue(i);
-            newAveraged[i] = oldValue * timeAveragingFactor + newValue * (1. - timeAveragingFactor);
+            if (peakHold && newValue > oldValue) {
+                newAveraged[i] = newValue;
+            } else {
+                newAveraged[i] = oldValue * timeAveragingFactor + newValue * (1. - timeAveragingFactor);
+            }
         }
 
         return new SampleLine(newAveraged, newSample.getOverExposed());
