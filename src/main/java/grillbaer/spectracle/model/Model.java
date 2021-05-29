@@ -51,9 +51,14 @@ public final class Model {
     private int sampleRows = 10;
     private double timeAveragingFactor = 0.;
     private double smoothIndexSteps = 0;
-    private boolean normalizeSampleValues;
 
+    private boolean normalizeSampleValues;
     private final Observers<Boolean> normalizeSampleValuesObservers = new Observers<>();
+
+    private Double hoverCursorWaveLength;
+    private final Observers<Double> hoverCursorWaveLengthObservers = new Observers<>();
+
+
     /**
      * Spectrum as it came from the last camera frame.
      */
@@ -286,6 +291,13 @@ public final class Model {
             this.normalizeSampleValues = normalize;
             recalcSampleLineFromRaw();
             this.normalizeSampleValuesObservers.fire(this.normalizeSampleValues);
+        }
+    }
+
+    public void setHoverCursorWaveLength(Double hoverCursorWaveLength) {
+        if (!Objects.equals(this.hoverCursorWaveLength, hoverCursorWaveLength)) {
+            this.hoverCursorWaveLength = hoverCursorWaveLength;
+            this.hoverCursorWaveLengthObservers.fire(hoverCursorWaveLength);
         }
     }
 

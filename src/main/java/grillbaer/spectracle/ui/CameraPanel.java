@@ -94,6 +94,9 @@ public class CameraPanel {
         this.context.getModel().getCameraObservers().add(this::cameraToPanel);
         this.context.getModel().getCameraPropsObservers().add(this::cameraPropsToPanel);
         this.context.getModel().getCameraPausedObservers().add(this::playPausedToPanel);
+
+        new HoverCursorCoupler(this.context.getModel(), this.spectrumReproductionView).start();
+        new HoverCursorCoupler(this.context.getModel(), this.cameraView).start();
     }
 
     public JComponent getComponent() {

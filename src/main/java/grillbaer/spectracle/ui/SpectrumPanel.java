@@ -90,6 +90,9 @@ public class SpectrumPanel {
                     this.spectrumGraphView.setExtrema(this.context.getModel().getExtrema());
                 });
 
+        new HoverCursorCoupler(this.context.getModel(), this.spectrumGraphView).start();
+        this.spectrumGraphView.setShowHoverCursorLabel(true);
+
         updateProcessingLabels();
     }
 

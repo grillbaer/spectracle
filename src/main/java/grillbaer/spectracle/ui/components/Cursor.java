@@ -58,9 +58,6 @@ public class Cursor {
         } else {
             labelBounds = null;
         }
-        if (labelBounds != null) {
-            y0 = labelBounds.y + labelBounds.height - 1;
-        }
 
         final var origHints = g2.getRenderingHints();
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);

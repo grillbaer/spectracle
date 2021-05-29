@@ -100,6 +100,7 @@ public class SpectrumGraphView extends SpectralXView {
         drawExtrema(g2);
         drawReferenceLightGraph(g2);
         drawSensitivityCorrectionGraph(g2);
+        drawHoverCursor(g2);
     }
 
     private void drawYGridOverlay(Graphics2D g2) {

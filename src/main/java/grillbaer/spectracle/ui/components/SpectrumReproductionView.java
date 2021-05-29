@@ -1,7 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.spectrum.Spectrum;
 import grillbaer.spectracle.spectrum.Formatting;
+import grillbaer.spectracle.spectrum.Spectrum;
 
 import java.awt.*;
 
@@ -41,6 +41,7 @@ public class SpectrumReproductionView extends SpectralXView {
         drawSpectralLines(g2);
         drawXGridOverlay(g2);
         drawXCursors(g2);
+        drawHoverCursor(g2);
     }
 
     private void drawSpectralLines(Graphics2D g2) {

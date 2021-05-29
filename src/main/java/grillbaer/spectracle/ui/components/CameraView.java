@@ -52,6 +52,11 @@ public class CameraView extends SpectralXView {
 
     @Override
     protected void drawView(Graphics2D g2) {
+        drawFrame(g2);
+        drawHoverCursor(g2);
+    }
+
+    private void drawFrame(Graphics2D g2) {
         if (this.frame != null) {
             final var insets = getInsets();
             final var image = this.frame.getImage();

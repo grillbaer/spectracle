@@ -1,5 +1,7 @@
 package grillbaer.spectracle.ui.components;
 
+import grillbaer.spectracle.model.Observers;
+import grillbaer.spectracle.spectrum.Formatting;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,6 +13,8 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.Math.round;
 
 /**
  * Basic view for spectral data over its X-axis with support for grid, cursors, labels etc.
@@ -24,6 +28,12 @@ public abstract class SpectralXView extends JComponent {
 
     @Getter
     private int headRoomHeight;
+
+    @Getter
+    private Double hoverCursorWaveLength;
+    @Getter
+    private final Observers<Double> hoverCursorWaveLengthObservers = new Observers<>();
+    private boolean showHoverCursorLabel;
 
     protected SpectralXView(int xAxisHeight) {
         this();
@@ -70,6 +80,21 @@ public abstract class SpectralXView extends JComponent {
         repaint();
 
         return cursor;
+    }
+
+    public void setHoverCursorWaveLength(Double hoverCursorWaveLength) {
+        if (!Objects.equals(this.hoverCursorWaveLength, hoverCursorWaveLength)) {
+            this.hoverCursorWaveLength = hoverCursorWaveLength;
+            this.hoverCursorWaveLengthObservers.fire(hoverCursorWaveLength);
+            repaint();
+        }
+    }
+
+    public void setShowHoverCursorLabel(boolean showHoverCursorLabel) {
+        if (this.showHoverCursorLabel != showHoverCursorLabel) {
+            this.showHoverCursorLabel = showHoverCursorLabel;
+            repaint();
+        }
     }
 
     @Override
@@ -181,9 +206,29 @@ public abstract class SpectralXView extends JComponent {
         }
     }
 
+    protected void drawHoverCursor(Graphics2D g2) {
+        if (this.hoverCursorWaveLength != null) {
+            final var color = new Color(250, 150, 100, 230);
+            final var label =
+                    this.showHoverCursorLabel ? Formatting.formatWaveLength(this.hoverCursorWaveLength) : null;
+            final var cursor = new Cursor("hover", this.hoverCursorWaveLength, () -> label, color, color);
+
+            final var x = (int) round(waveLengthToX(cursor.getValue()));
+            final var y0 = this.viewArea.y;
+            var y1 = this.viewArea.y + this.viewArea.height + this.xAxisHeight - 2;
+            Rectangle labelBounds = null;
+            if (label != null) {
+                labelBounds = cursor.calcDefaultLabelBounds(g2, x, y0, x, y1, label);
+                labelBounds.y = y1 - labelBounds.height;
+                y1 -= labelBounds.height;
+            }
+            cursor.draw(g2, x, y0, x, y1, labelBounds);
+        }
+    }
+
     protected void drawXCursor(Graphics2D g2, Cursor cursor, List<Rectangle> labelAvoidAreas) {
-        final var x = (int) waveLengthToX(cursor.getValue());
-        final var y0 = this.viewArea.y - getHeadRoomHeight();
+        final var x = (int) waveLengthToX(round(cursor.getValue()));
+        var y0 = this.viewArea.y - getHeadRoomHeight();
         final var y1 = this.viewArea.y + this.viewArea.height + 5;
         Rectangle labelBounds = null;
         final var label = cursor.getLabelSupplier().get();
@@ -195,6 +240,7 @@ public abstract class SpectralXView extends JComponent {
             }
             moveDownOnCollision(labelAvoidAreas, labelBounds);
             labelAvoidAreas.add(labelBounds);
+            y0 = labelBounds.y + labelBounds.height - 1;
         }
         cursor.draw(g2, x, y0, x, y1, labelBounds);
     }
@@ -299,6 +345,20 @@ public abstract class SpectralXView extends JComponent {
                 this.draggingXCursor.setValue(xToWaveLength(e.getX()));
                 repaint();
             }
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (!getBounds().contains(e.getPoint())) {
+                setHoverCursorWaveLength(null);
+            } else {
+                setHoverCursorWaveLength(xToWaveLength(e.getX()));
+            }
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            setHoverCursorWaveLength(null);
         }
     }
 }
