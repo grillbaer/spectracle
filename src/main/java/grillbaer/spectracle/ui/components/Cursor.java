@@ -35,12 +35,13 @@ public class Cursor {
         this.dragging = false;
 
         this.lineColor = lineColor;
-        this.draggingColor = new Color(255, 255, 255, 200);
-        this.stroke = new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                0f, new float[]{0f, 4f}, 0f);
+        this.draggingColor = new Color(255, 255, 255, 220);
+        this.stroke = new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                0f, new float[]{0f, 6f}, 0f);
 
-        this.bgColor = new Color(0, 0, 0, 50);
-        this.bgStroke = new BasicStroke(3f);
+        this.bgColor = new Color(0, 0, 0, 120);
+        this.bgStroke = new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                0f, new float[]{0f, 6f}, 3f);
 
         this.labelColor = labelColor != null ? labelColor : lineColor;
         this.labelFont = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
@@ -62,6 +63,15 @@ public class Cursor {
         final var origHints = g2.getRenderingHints();
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        if (label != null && labelBounds != null) {
+            g2.setFont(this.labelFont);
+            g2.setColor(this.bgColor);
+            g2.fillRect(labelBounds.x - 1, labelBounds.y - 1, labelBounds.width + 2, labelBounds.height + 2);
+            g2.setColor(this.labelColor);
+            RenderUtils.drawHtml(g2, label, labelBounds, Alignment.NORTH_WEST, Direction.RIGHT, false, false);
+        }
+
         g2.setColor(this.getBgColor());
         g2.setStroke(this.bgStroke);
         g2.drawLine(x0, y0, x1, y1);
@@ -73,14 +83,6 @@ public class Cursor {
 
         g2.setStroke(origStroke);
         g2.setRenderingHints(origHints);
-
-        if (label != null && labelBounds != null) {
-            g2.setFont(this.labelFont);
-            g2.setColor(this.bgColor);
-            g2.fillRect(labelBounds.x - 1, labelBounds.y - 1, labelBounds.width + 2, labelBounds.height + 2);
-            g2.setColor(this.labelColor);
-            RenderUtils.drawHtml(g2, label, labelBounds, Alignment.NORTH_WEST, Direction.RIGHT, false, false);
-        }
     }
 
     public Rectangle calcDefaultLabelBounds(Graphics2D g2, int x0, int y0, int x1, int y1, String label) {

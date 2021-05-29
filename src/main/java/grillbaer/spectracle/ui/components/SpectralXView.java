@@ -208,7 +208,7 @@ public abstract class SpectralXView extends JComponent {
 
     protected void drawHoverCursor(Graphics2D g2) {
         if (this.hoverCursorWaveLength != null) {
-            final var color = new Color(250, 150, 100, 230);
+            final var color = new Color(255, 255, 255, 150);
             final var label =
                     this.showHoverCursorLabel ? Formatting.formatWaveLength(this.hoverCursorWaveLength) : null;
             final var cursor = new Cursor("hover", this.hoverCursorWaveLength, () -> label, color, color);
