@@ -46,6 +46,7 @@ spectroscope or grid or prisma horizontally.
 * Peak hold, combinable with time averaging for peak decay
 * Gaussian smoothing for noise reduction
 * Manual exposure control
+* Overexposure visualization
 * Play/Stop
 * Saving and loading of captured spectra as CSV
 
