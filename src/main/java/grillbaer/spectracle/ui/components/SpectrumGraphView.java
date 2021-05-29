@@ -12,6 +12,7 @@ import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.min;
 import static java.util.Comparator.comparing;
 
 /**
@@ -112,12 +113,13 @@ public class SpectrumGraphView extends SpectralXView {
         int lastX = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
+            final var nextNanoMeters = this.spectrum.getNanoMetersAtIndex(min(len - 1, i + 1));
+            final int x = (int) Math.round(waveLengthToX((nanoMeters + nextNanoMeters) / 2.));
             final double value = this.spectrum.getValueAtIndex(i);
-            final int x = (int) waveLengthToX(nanoMeters);
             final int y = (int) valueToY(value);
             final var color = Formatting.colorForWaveLength(nanoMeters);
             g2.setColor(color);
-            g2.fillRect(Math.min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
+            g2.fillRect(min(lastX, x), y, Math.abs(x - lastX), this.viewArea.y + this.viewArea.height - y);
             lastX = x;
         }
     }
