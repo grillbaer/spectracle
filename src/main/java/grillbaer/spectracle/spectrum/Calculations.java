@@ -181,7 +181,7 @@ public final class Calculations {
     public static Extrema findLocalExtrema(@NonNull SampleLine input, double noiseSigmaIndexSteps, double baseSigmaIndexSteps, int maxMinima, int maxMaxima) {
         final var denoised = gaussianSmooth(input, noiseSigmaIndexSteps);
         final var baseLevelNarrow = gaussianNeighbourhood(input, baseSigmaIndexSteps);
-        final var baseLevelWide = gaussianNeighbourhood(input, baseSigmaIndexSteps * 4.);
+        final var baseLevelWide = gaussianNeighbourhood(input, baseSigmaIndexSteps * 5.);
         final var levelFactor = 100.;
         final var levelLimit = 0.3;
 

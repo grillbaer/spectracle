@@ -284,8 +284,10 @@ public final class Model {
         if (this.spectrum == null)
             return null;
 
+        // values have been determined for a 1280 resolution
+        final var lengthRatio = this.spectrum.getLength() / 1280.;
         return Calculations.findLocalExtrema(this.spectrum.getSampleLine(),
-                0.5, 2., 16, 16);
+                0.6 * lengthRatio, 2. * lengthRatio, 16, 16);
     }
 
     public void setNormalizeSampleValues(boolean normalize) {
