@@ -5,6 +5,7 @@ import grillbaer.spectracle.camera.CameraProps;
 import grillbaer.spectracle.camera.Frame;
 import grillbaer.spectracle.model.Settings.SensitivityCalibration;
 import grillbaer.spectracle.spectrum.*;
+import grillbaer.spectracle.spectrum.Calculations.Extrema;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -270,6 +271,14 @@ public final class Model {
         final SampleLine normalized = normalizeSampleValues ? Calculations.normalize(smoothed) : smoothed;
 
         return Spectrum.create(normalized, purifiedSpectrum.getCalibration());
+    }
+
+    public Extrema getExtrema() {
+        if (this.spectrum == null)
+            return null;
+
+        return Calculations.findLocalExtrema(this.spectrum.getSampleLine(),
+                0.5, 2., 16, 16);
     }
 
     public void setNormalizeSampleValues(boolean normalize) {

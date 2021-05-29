@@ -85,7 +85,10 @@ public class SpectrumPanel {
         this.panel.add(controlPanel, BorderLayout.SOUTH);
 
         this.context.getModel().getSpectrumObservers()
-                .add(this.spectrumGraphView::setSpectrum);
+                .add(spectrum -> {
+                    this.spectrumGraphView.setSpectrum(spectrum);
+                    this.spectrumGraphView.setExtrema(this.context.getModel().getExtrema());
+                });
 
         updateProcessingLabels();
     }

@@ -1,9 +1,10 @@
 package grillbaer.spectracle.ui.components;
 
-import grillbaer.spectracle.spectrum.Calculations;
+import grillbaer.spectracle.spectrum.Calculations.Extrema;
 import grillbaer.spectracle.spectrum.Calculations.Extremum;
 import grillbaer.spectracle.spectrum.Formatting;
 import grillbaer.spectracle.spectrum.Spectrum;
+import lombok.Getter;
 import lombok.NonNull;
 
 import java.awt.*;
@@ -31,7 +32,10 @@ public class SpectrumGraphView extends SpectralXView {
     private Spectrum referenceLightSpectrum;
     private Spectrum sensitivityCorrectionSpectrum;
 
+    private Extrema extrema;
+    @Getter
     private boolean drawMaxima;
+    @Getter
     private boolean drawMinima;
 
     public SpectrumGraphView() {
@@ -62,6 +66,11 @@ public class SpectrumGraphView extends SpectralXView {
 
     public void setDrawMinima(boolean drawMinima) {
         this.drawMinima = drawMinima;
+        repaint();
+    }
+
+    public void setExtrema(Extrema extrema) {
+        this.extrema = extrema;
         repaint();
     }
 
@@ -127,17 +136,16 @@ public class SpectrumGraphView extends SpectralXView {
     private void drawExtrema(Graphics2D g2) {
         if (!this.drawMaxima && !this.drawMinima)
             return;
-
-        final var extrema = Calculations.findLocalExtrema(this.spectrum.getSampleLine(),
-                0.5, 2., 16, 16);
+        if (this.extrema == null)
+            return;
 
         final var textRegions = new ArrayList<Rectangle>();
         if (this.drawMaxima) {
-            extrema.getMaxima().stream().sorted(comparing(Extremum::getIndex).reversed())
+            this.extrema.getMaxima().stream().sorted(comparing(Extremum::getIndex).reversed())
                     .forEach(e -> drawExtremum(g2, e, textRegions));
         }
         if (this.drawMinima) {
-            extrema.getMinima().stream().sorted(comparing(Extremum::getIndex).reversed())
+            this.extrema.getMinima().stream().sorted(comparing(Extremum::getIndex).reversed())
                     .forEach(e -> drawExtremum(g2, e, textRegions));
         }
     }
