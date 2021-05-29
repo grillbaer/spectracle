@@ -156,6 +156,4 @@ public class CameraPanel {
         this.context.getModel().setCamera(nextCam);
         lastCam.close();
     }
-
-
 }
