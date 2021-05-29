@@ -33,18 +33,18 @@ public class KnownSpectrums {
 
     public static final NamedWaveLengthGroup FRAUNHOFER_WAVELENGTHS =
             new NamedWaveLengthGroup("Fraunhofer", List.of(
-                    new NamedWaveLength("K Ca+", 393),
-                    new NamedWaveLength("H Ca+", 397),
-                    new NamedWaveLength("G Ca/Fe", 431),
-                    new NamedWaveLength("F H", 486),
-                    new NamedWaveLength("b2 Mg", 517),
-                    new NamedWaveLength("b1 Mg", 518),
-                    new NamedWaveLength("E Fe", 527),
-                    new NamedWaveLength("D2 Na", 589),
-                    new NamedWaveLength("D1 Na", 590),
-                    new NamedWaveLength("C H", 656),
-                    new NamedWaveLength("B O₂", 687),
-                    new NamedWaveLength("A O₂", 759)
+                    new NamedWaveLength("K Ca+", 393.366),
+                    new NamedWaveLength("H Ca+", 396.847),
+                    new NamedWaveLength("G Ca/Fe", 430.78),
+                    new NamedWaveLength("F H", 486.134),
+                    new NamedWaveLength("b2 Mg", 517.270),
+                    new NamedWaveLength("b1 Mg", 518.362),
+                    new NamedWaveLength("E2 Fe", 527.039),
+                    new NamedWaveLength("D2 Na", 588.995),
+                    new NamedWaveLength("D1 Na", 589.592),
+                    new NamedWaveLength("C H", 656.281),
+                    new NamedWaveLength("B O₂", 686.719),
+                    new NamedWaveLength("A O₂", 759.370)
             ));
 
     private static double plancksRadiationLaw(double temperatureKelvin, double waveLengthMeter) {
