@@ -62,6 +62,7 @@ public class CameraPanel {
         this.normalizeSampleValuesButton = new JToggleButton("⭱ Normalize");
         this.normalizeSampleValuesButton.addActionListener(e -> this.context.getModel()
                 .setNormalizeSampleValues(this.normalizeSampleValuesButton.isSelected()));
+        this.context.getModel().getNormalizeSampleValuesObservers().add(this::normalizeToPanel);
 
         this.playPauseButton = new JButton();
         this.playPauseButton.addActionListener(e -> toggleCameraPaused());
@@ -88,6 +89,7 @@ public class CameraPanel {
 
         cameraToPanel(this.context.getModel().getCamera());
         playPausedToPanel(this.context.getModel().isCameraPaused());
+        normalizeToPanel(this.context.getModel().isNormalizeSampleValues());
 
         this.context.getModel().getCameraObservers().add(this::cameraToPanel);
         this.context.getModel().getCameraPropsObservers().add(this::cameraPropsToPanel);
@@ -114,6 +116,10 @@ public class CameraPanel {
         this.playPauseButton.setText(paused ? "▶ Play" : "⏹ Stop");
         this.saveButton.setEnabled(paused);
         this.loadButton.setEnabled(paused);
+    }
+
+    private void normalizeToPanel(boolean normalize) {
+        this.normalizeSampleValuesButton.setSelected(normalize);
     }
 
     private void cameraToPanel(Camera camera) {
@@ -147,4 +153,6 @@ public class CameraPanel {
         this.context.getModel().setCamera(nextCam);
         lastCam.close();
     }
+
+
 }
