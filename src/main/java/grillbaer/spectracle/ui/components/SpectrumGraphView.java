@@ -129,7 +129,7 @@ public class SpectrumGraphView extends SpectralXView {
             return;
 
         final var extrema = Calculations.findLocalExtrema(this.spectrum.getSampleLine(),
-                0.5, 1.5, 16, 16);
+                0.5, 2., 16, 16);
 
         final var textRegions = new ArrayList<Rectangle>();
         if (this.drawMaxima) {

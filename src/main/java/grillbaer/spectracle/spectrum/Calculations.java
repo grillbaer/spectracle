@@ -6,6 +6,7 @@ import lombok.NonNull;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.Math.max;
@@ -121,13 +122,9 @@ public final class Calculations {
         if (sigmaInIndexSteps <= 0)
             return input;
 
-        final var distrib = new NormalDistribution(0., sigmaInIndexSteps);
-        final var smoothArray = new double[(int) sigmaInIndexSteps * 3 + 2];
-        var sum = 0.0;
-        for (int i = 0; i < smoothArray.length; i++) {
-            smoothArray[i] = distrib.density(i);
-            sum += (i > 0 ? 2 : 1) * smoothArray[i];
-        }
+        final double[] smoothArray = gaussianHalfArray(sigmaInIndexSteps, (int) sigmaInIndexSteps * 3 + 2);
+        final var sum = smoothArray[0] + 2. * Arrays.stream(smoothArray).skip(1).sum();
+
         final var result = new double[input.getLength()];
         for (int i = 0; i < input.getLength(); i++) {
             result[i] = smoothArray[0] * input.getValue(i);
@@ -141,14 +138,44 @@ public final class Calculations {
     }
 
     /**
+     * Calculate a sample line vector with gaussian smoothing over the neighbour values excluding the center value itself.
+     */
+    public static SampleLine gaussianNeighbourhood(@NonNull SampleLine input, double sigmaInIndexSteps) {
+        if (sigmaInIndexSteps <= 0)
+            return input;
+
+        final double[] smoothArray = gaussianHalfArray(sigmaInIndexSteps, (int) sigmaInIndexSteps * 3 + 2);
+        final var sum = 2. * Arrays.stream(smoothArray).skip(1).sum();
+
+        final var result = new double[input.getLength()];
+        for (int i = 0; i < input.getLength(); i++) {
+            for (int j = 1; j < smoothArray.length; j++) {
+                result[i] += smoothArray[j] * (input.getValue(max(0, i - j)) + input.getValue(min(input.getLength() - 1, i + j)));
+            }
+            result[i] /= sum;
+        }
+
+        return new SampleLine(result, input.getOverExposed());
+    }
+
+    private static double[] gaussianHalfArray(double sigmaInIndexSteps, int length) {
+        final var distrib = new NormalDistribution(0., sigmaInIndexSteps);
+        final var smoothArray = new double[length];
+        for (int i = 0; i < smoothArray.length; i++) {
+            smoothArray[i] = distrib.density(i);
+        }
+
+        return smoothArray;
+    }
+
+    /**
      * Find local minimums and maximums in a sample line.
      * The extrema are returned in descending level order.
      */
     public static Extrema findLocalExtrema(@NonNull SampleLine input, double noiseSigmaIndexSteps, double baseSigmaIndexSteps, int maxMinima, int maxMaxima) {
         final var denoised = gaussianSmooth(input, noiseSigmaIndexSteps);
-        //TODO: cover more base level widths to find narrow and broad peaks, multi-scale search
-        final var baseLevelNarrow = gaussianSmooth(input, baseSigmaIndexSteps);
-        final var baseLevelWide = gaussianSmooth(input, baseSigmaIndexSteps * 5.);
+        final var baseLevelNarrow = gaussianNeighbourhood(input, baseSigmaIndexSteps);
+        final var baseLevelWide = gaussianNeighbourhood(input, baseSigmaIndexSteps * 4.);
         final var levelFactor = 100.;
         final var levelLimit = 0.3;
 
