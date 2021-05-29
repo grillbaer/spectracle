@@ -364,6 +364,7 @@ public abstract class SpectralXView extends JComponent {
         }
 
         private void setHoverCursor(MouseEvent e) {
+            updateViewArea();
             setHoverCursorWaveLength(xToWaveLength(e.getX()));
         }
 
