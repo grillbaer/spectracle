@@ -15,6 +15,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static grillbaer.spectracle.spectrum.Formatting.formatWaveLength;
 import static java.lang.Math.exp;
 import static javax.swing.SwingConstants.HORIZONTAL;
 
@@ -115,8 +116,8 @@ public class SpectrumPanel {
         for (NamedWaveLength waveLength : waveLengthGroup.getWaveLengthList()) {
             final var waveLengthColor = Formatting.colorForWaveLength(waveLength.getNanoMeters());
             final var cursor = new Cursor("common_wl_" + waveLength.getName(), waveLength.getNanoMeters(),
-                    () -> waveLengthGroup.getGroupName() + " " + waveLength.getName() + " "
-                            + Formatting.formatWaveLength(waveLength.getNanoMeters()),
+                    () -> formatWaveLength(waveLength.getNanoMeters()) + " "
+                            + waveLengthGroup.getGroupName() + " " + waveLength.getName(),
                     new Color(255, 255, 255, 180), RenderUtils.whitenColor(waveLengthColor, 0.3));
             this.commonWaveLengthCursors.add(cursor);
             this.spectrumGraphView.putXCursor(cursor);
