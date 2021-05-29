@@ -303,6 +303,7 @@ public abstract class SpectralXView extends JComponent {
             this.draggingXCursor = findNearestDraggableXCursor(e.getX());
             if (this.draggingXCursor != null) {
                 this.draggingXCursor.setDragging(true);
+                clearHoverCursor();
                 repaint();
             }
         }
@@ -349,15 +350,24 @@ public abstract class SpectralXView extends JComponent {
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            if (!getBounds().contains(e.getPoint())) {
-                setHoverCursorWaveLength(null);
-            } else {
-                setHoverCursorWaveLength(xToWaveLength(e.getX()));
-            }
+            setHoverCursor(e);
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            setHoverCursor(e);
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
+            clearHoverCursor();
+        }
+
+        private void setHoverCursor(MouseEvent e) {
+            setHoverCursorWaveLength(xToWaveLength(e.getX()));
+        }
+
+        private void clearHoverCursor() {
             setHoverCursorWaveLength(null);
         }
     }
