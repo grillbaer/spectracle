@@ -5,6 +5,8 @@ import grillbaer.spectracle.spectrum.Spectrum;
 
 import java.awt.*;
 
+import static java.lang.Math.min;
+
 /**
  * Spectrum visualization as line view.
  */
@@ -24,9 +26,9 @@ public class SpectrumReproductionView extends SpectralXView {
     @Override
     public Dimension getPreferredSize() {
         if (this.spectrum != null) {
-            return new Dimension(this.spectrum.getLength(), 30);
+            return new Dimension(this.spectrum.getLength(), 40);
         } else {
-            return new Dimension(300, 30);
+            return new Dimension(300, 40);
         }
     }
 
@@ -49,8 +51,9 @@ public class SpectrumReproductionView extends SpectralXView {
         int lastX = (int) waveLengthToX(this.spectrum.getNanoMetersAtIndex(0));
         for (int i = 0; i < len; i++) {
             final var nanoMeters = this.spectrum.getNanoMetersAtIndex(i);
+            final var nextNanoMeters = this.spectrum.getNanoMetersAtIndex(min(len - 1, i + 1));
+            final int x = (int) Math.round(waveLengthToX((nanoMeters + nextNanoMeters) / 2.));
             final double value = this.spectrum.getValueAtIndex(i);
-            final int x = (int) waveLengthToX(nanoMeters);
 
             final var color = valueToColor(nanoMeters, value);
             g2.setColor(color);
