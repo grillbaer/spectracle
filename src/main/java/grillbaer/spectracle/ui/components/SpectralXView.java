@@ -189,6 +189,7 @@ public abstract class SpectralXView extends JComponent {
         final var label = cursor.getLabelSupplier().get();
         if (label != null && labelAvoidAreas != null) {
             labelBounds = cursor.calcDefaultLabelBounds(g2, x, y0, x, y1, label);
+            labelBounds.grow(1, 0);
             if (labelBounds.getMaxX() > this.viewArea.getMaxX()) {
                 labelBounds.x = this.viewArea.x + this.viewArea.width - labelBounds.width;
             }
