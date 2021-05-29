@@ -13,11 +13,11 @@ spectroscope or grid or prisma horizontally.
 
 ### Ordinary Fluorescent Lamp
 
-![Ordinary Fluorescent Lamp](samples/fluorescent_daylight_good_calibration.png)
+![Ordinary Fluorescent Lamp](samples/fluorescent_lamp_good_calibration.png)
 
 ### High Quality Fluorescent Daylight Lamp
 
-![High Quality Fluorescent Daylight Lamp](samples/fluorescent_lamp_good_calibration.png)
+![High Quality Fluorescent Daylight Lamp](samples/fluorescent_daylight_good_calibration.png)
 
 ### Desktop LED Lamp with Good Light
 
