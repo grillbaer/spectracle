@@ -31,6 +31,10 @@ spectroscope or grid or prisma horizontally.
 
 ![Pinkish Plant LED Panel](samples/plant_light_good_calibration.png)
 
+### Daylight Through Green Plant Leaf
+
+![Daylight Through Green Plant Leaf](samples/daylight_through_green_leaf.png)
+
 ## Current Features
 
 * Colored spectrum graph view
@@ -39,8 +43,8 @@ spectroscope or grid or prisma horizontally.
 * Sensitivity calibration by comparing a captured spectrum with a known reference spectrum of an incandescent lamp or a
   halogen lamp
 * Known wavelengths display:
-  * Fraunhofer lines of the sun spectrum
-  * Wavelengths of fluorescent tubes
+    * Fraunhofer lines of the sun spectrum
+    * Wavelengths of fluorescent tubes
 * Peak and dent detection with wavelength display
 * Time averaging
 * Peak hold, combinable with time averaging for peak decay
