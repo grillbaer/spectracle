@@ -31,7 +31,9 @@ spectroscope or grid or prisma horizontally.
 
 ![Pinkish Plant LED Panel](samples/plant_light_good_calibration.png)
 
-### Daylight Through Green Plant Leaf
+### Daylight Through a Green Plant Leaf
+
+A leaf of sorrel:
 
 ![Daylight Through Green Plant Leaf](samples/daylight_through_green_leaf.png)
 
