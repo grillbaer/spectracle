@@ -63,12 +63,12 @@ The setup uses
 
 * a Paton Hawksley benchtop spectroscope
 * an ELP 1080P USB web cam with OV2710 1/2.7" color CMOS sensor
-* a lens with 16 mm focal length, without IR filter, ⌀ 12mm threading.
+* a lens with 16 mm focal length, without IR filter, ⌀ 12mm thread.
 
 The setup is far from optimal. The spectroscope itself is great. However, a RGB camera causes some problems in a
 spectrometer due to the inconsistent sensitivity over the spectrum. So, the camera shows some false peaks or dents in
 the spectrum depending on light intensity for yellow colors around 580 nm, just at the transition between green and red
-filter. Camera and lens are quite cheap. The 12 mm threading is wobbely, I don't know which side is missing precision.
+filter. Camera and lens are quite cheap. The 12 mm thread is wobbely, I don't know which side is missing precision.
 The lens thread used with this camera is also almost too short to focus to infinity, so that some separate holder is
 required to stabilize the setup. The imprecise USB plug of my received item lost connection every now and then at least
 in my notebook. Soldering a new plug fixed this. But hey, that's what to expect for that price.
