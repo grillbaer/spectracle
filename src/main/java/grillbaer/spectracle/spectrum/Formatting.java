@@ -23,32 +23,34 @@ public final class Formatting {
     // orange  590-625 nm   30°
     // red     625-700 nm    0°
 
+    //@formatter:off
     private static final List<WaveLengthColor> SPECTRUM_GRADIENT = List.of(
-            new WaveLengthColor(300., 300f, 0.2f),
-            new WaveLengthColor(380., 280f, 0.4f),
-            new WaveLengthColor(390., 280f, 0.9f),
-            new WaveLengthColor(415., 270f, 1f),
-            new WaveLengthColor(468., 240f, 1f),
-            new WaveLengthColor(492., 180f, 1f),
-            new WaveLengthColor(532., 120f, 1f),
-            new WaveLengthColor(577., 60f, 1f),
-            new WaveLengthColor(607., 30f, 1f),
-            new WaveLengthColor(657., 0f, 1f),
-            new WaveLengthColor(690., -10f, 0.9f),
-            new WaveLengthColor(700., -10f, 0.7f),
-            new WaveLengthColor(750., -10f, 0.4f),
-            new WaveLengthColor(1200., 0f, 0.2f)
+            new WaveLengthColor( 300., 300f, 0.4f, 0.3f),
+            new WaveLengthColor( 380., 280f, 1f  , 0.4f),
+            new WaveLengthColor( 390., 275f, 1f  , 0.9f),
+            new WaveLengthColor( 415., 270f, 1f  , 1f),
+            new WaveLengthColor( 468., 240f, 1f  , 1f),
+            new WaveLengthColor( 492., 180f, 1f  , 1f),
+            new WaveLengthColor( 532., 120f, 1f  , 1f),
+            new WaveLengthColor( 577.,  60f, 1f  , 1f),
+            new WaveLengthColor( 607.,  30f, 1f  , 1f),
+            new WaveLengthColor( 657.,   0f, 1f  , 1f),
+            new WaveLengthColor( 690., -10f, 1f  , 0.9f),
+            new WaveLengthColor( 700., -10f, 1f  , 0.7f),
+            new WaveLengthColor( 750., -10f, 0.6f, 0.3f),
+            new WaveLengthColor(1100., -20f, 0.0f, 0.3f)
     );
+    //@formatter:on
 
     public static Color colorForWaveLength(double nanoMeter) {
         if (nanoMeter <= SPECTRUM_GRADIENT.get(0).getNanoMeter()) {
             final var begin = SPECTRUM_GRADIENT.get(0);
-            return Color.getHSBColor(begin.getHueDegrees() / 360f, 1f, begin.brightness);
+            return Color.getHSBColor(begin.getHueDegrees() / 360f, begin.getSaturation(), begin.getBrightness());
         }
 
         if (nanoMeter >= SPECTRUM_GRADIENT.get(SPECTRUM_GRADIENT.size() - 1).getNanoMeter()) {
             final var end = SPECTRUM_GRADIENT.get(SPECTRUM_GRADIENT.size() - 1);
-            return Color.getHSBColor(end.getHueDegrees() / 360f, 1f, end.brightness);
+            return Color.getHSBColor(end.getHueDegrees() / 360f, end.getSaturation(), end.getBrightness());
         }
 
         int beginIndex;
@@ -64,12 +66,14 @@ public final class Formatting {
         final var deltaBeginNanoMeter = nanoMeter - begin.getNanoMeter();
         final var deltaNanoMeter = end.getNanoMeter() - begin.getNanoMeter();
         final var deltaHueDegrees = end.getHueDegrees() - begin.getHueDegrees();
+        final var deltaSaturation = end.getSaturation() - begin.getSaturation();
         final var deltaBrightness = end.getBrightness() - begin.getBrightness();
 
         final float hueDegrees = (float) (begin.getHueDegrees() + deltaBeginNanoMeter / deltaNanoMeter * deltaHueDegrees);
+        final float saturation = (float) (begin.getSaturation() + deltaBeginNanoMeter / deltaNanoMeter * deltaSaturation);
         final float brightness = (float) (begin.getBrightness() + deltaBeginNanoMeter / deltaNanoMeter * deltaBrightness);
 
-        return Color.getHSBColor(hueDegrees / 360f, 1f, brightness);
+        return Color.getHSBColor(hueDegrees / 360f, saturation, brightness);
     }
 
     public static String formatWaveLength(double nanoMeters) {
@@ -81,6 +85,7 @@ public final class Formatting {
     private static final class WaveLengthColor {
         private final double nanoMeter;
         private final float hueDegrees;
+        private final float saturation;
         private final float brightness;
     }
 }
