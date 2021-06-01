@@ -227,7 +227,7 @@ public abstract class SpectralXView extends JComponent {
     }
 
     protected void drawXCursor(Graphics2D g2, Cursor cursor, List<Rectangle> labelAvoidAreas) {
-        final var x = (int) waveLengthToX(round(cursor.getValue()));
+        final var x = (int) round(waveLengthToX(cursor.getValue()));
         var y0 = this.viewArea.y - getHeadRoomHeight();
         final var y1 = this.viewArea.y + this.viewArea.height + 5;
         Rectangle labelBounds = null;
