@@ -1,1 +1,3 @@
 /target/
+/*/target/
+/opencv-*/dependency-reduced-pom.xml

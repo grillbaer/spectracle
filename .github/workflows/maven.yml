@@ -30,9 +30,9 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
     - name: Maven Build
-      run: mvn -B clean package jpackage:jpackage --file pom.xml
+      run: mvn -B clean package --file pom.xml
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: Binary-${{ runner.os }}
-        path: target/dist/*
+        path: spectracle-app/target/dist/*

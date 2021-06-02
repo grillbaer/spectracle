@@ -7,7 +7,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="spectracle" />
+        <module name="opencv-windows-x64" />
+        <module name="spectracle-app" />
       </profile>
     </annotationProcessing>
   </component>

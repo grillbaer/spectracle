@@ -5,8 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.grillbaer</groupId>
-    <artifactId>spectracle</artifactId>
+    <artifactId>spectracle-parent</artifactId>
+    <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
+
+    <modules>
+        <module>opencv-windows-x64</module>
+        <module>spectracle-app</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
@@ -20,172 +26,5 @@
         <app.copyright>(C) 2021 Holger Fleischmann (grillbaer)</app.copyright> <!-- TODO: automate year, add license -->
         <app.description>Spectrometer UI for Computer Attached Cameras</app.description>
     </properties>
-
-    <build>
-        <plugins>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <!-- redirect app jar to jmods dir -->
-                    <outputDirectory>target/jmods</outputDirectory>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <!-- don't install app jar to repo-->
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.2</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <!-- copy all dependency jars to jmods dir -->
-                            <includeScope>runtime</includeScope>
-                            <outputDirectory>target/jmods</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.panteleyev</groupId>
-                <artifactId>jpackage-maven-plugin</artifactId>
-                <version>1.3.0</version>
-
-                <!-- TODO: strip down installer size, use modules, find small alternative to OpenCV -->
-
-                <configuration>
-                    <name>${app.name}</name>
-                    <appVersion>${app.version}</appVersion>
-                    <vendor>${app.vendor}</vendor>
-                    <copyright>${app.copyright}</copyright>
-                    <!-- TODO: <licenseFile></licenseFile> -->
-                    <description>${app.description}</description>
-
-                    <input>target/jmods</input>
-                    <destination>target/dist</destination>
-
-                    <mainJar>${project.artifactId}-${project.version}.jar</mainJar>
-                    <mainClass>${main.class}</mainClass>
-                    <javaOptions>
-                        <option>-Dfile.encoding=UTF-8</option>
-                    </javaOptions>
-                </configuration>
-            </plugin>
-
-        </plugins>
-    </build>
-
-    <profiles>
-        <!-- TODO: add profiles for Linux and Mac installers, also for plain zips -->
-        <profile>
-            <id>win</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.panteleyev</groupId>
-                        <artifactId>jpackage-maven-plugin</artifactId>
-                        <version>1.3.0</version>
-
-                        <configuration>
-                            <!-- TODO: <icon>icons/icons.ico</icon> -->
-                            <winUpgradeUuid>1becb599-802d-42b6-9ac1-04a3773ac21a</winUpgradeUuid>
-                            <winMenuGroup>Spectracle</winMenuGroup>
-                            <winMenu>true</winMenu>
-                            <winShortcut>true</winShortcut>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
-    <dependencies>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.12.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-            <version>2.12.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf</artifactId>
-            <version>1.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>net.harawata</groupId>
-            <artifactId>appdirs</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openpnp</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.5.1-2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>16</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
-            <version>16</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.7.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
 </project>
