@@ -111,7 +111,7 @@
                                     <goal>jpackage</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- TODO: <icon>icons/icons.ico</icon> -->
+                                    <icon>media/icon.ico</icon>
                                     <type>MSI</type>
                                     <winUpgradeUuid>1becb599-802d-42b6-9ac1-04a3773ac21a</winUpgradeUuid>
                                     <winMenuGroup>Spectracle</winMenuGroup>
@@ -154,7 +154,7 @@
                                     <goal>jpackage</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- TODO: <icon>icons/icons.???</icon> -->
+                                    <icon>media/icon.svg</icon>
                                     <type>DEB</type>
                                     <linuxAppCategory>Science</linuxAppCategory>
                                     <linuxMenuGroup>Science</linuxMenuGroup>
