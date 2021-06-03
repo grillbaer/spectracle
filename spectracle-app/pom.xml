@@ -95,6 +95,7 @@
             <activation>
                 <os>
                     <family>windows</family>
+                    <arch>amd64</arch>
                 </os>
             </activation>
             <build>
@@ -131,6 +132,51 @@
                 </dependency>
             </dependencies>
         </profile>
+
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.3.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jpackage</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- TODO: <icon>icons/icons.???</icon> -->
+                                    <type>DEB</type>
+                                    <linuxAppCategory>Science</linuxAppCategory>
+                                    <linuxMenuGroup>Science</linuxMenuGroup>
+                                    <!--TODO: /opt is default <installDir></installDir>-->
+                                    <!--TODO: <linuxDebMaintainer></linuxDebMaintainer>-->
+                                    <linuxShortcut>true</linuxShortcut>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>opencv-linux-x64</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
     </profiles>
 
     <dependencies>

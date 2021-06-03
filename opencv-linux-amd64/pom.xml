@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>spectracle-parent</artifactId>
+        <groupId>io.github.grillbaer</groupId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>opencv-linux-x64</artifactId>
+
+    <!-- The goal of this module is to create a size-reduced version of the
+         opencv jar with all shared libraries for other OS platforms removed.
+         Filtering is done by the shade plugin. -->
+    <profiles>
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <filters>
+                                        <filter>
+                                            <artifact>org.openpnp:opencv</artifact>
+                                            <includes>
+                                                <include>**</include>
+                                            </includes>
+                                            <excludes>
+                                                <exclude>nu/pattern/opencv/linux/x86_32/**</exclude>
+                                                <exclude>nu/pattern/opencv/linux/ARM*/**</exclude>
+                                                <exclude>nu/pattern/opencv/osx/**</exclude>
+                                                <exclude>nu/pattern/opencv/windows/**</exclude>
+                                            </excludes>
+                                        </filter>
+                                    </filters>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openpnp</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.5.1-2</version>
+        </dependency>
+    </dependencies>
+
+</project>

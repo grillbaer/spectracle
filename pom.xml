@@ -10,8 +10,8 @@
     <version>0.1-SNAPSHOT</version>
 
     <modules>
-        <module>opencv-windows-x64</module>
-        <module>opencv-linux-x64</module>
+        <module>opencv-windows-amd64</module>
+        <module>opencv-linux-amd64</module>
         <module>spectracle-app</module>
     </modules>
 
