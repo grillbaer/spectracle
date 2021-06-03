@@ -1,4 +1,4 @@
-# Spectracle – a Spectrometer UI for Computer Attached Cameras
+# ![Icon](spectracle-app/src/main/resources/icons/icon-48.png) Spectracle – a Spectrometer UI for Computer Attached Cameras
 
 ### WORK IN PROGRESS!
 
