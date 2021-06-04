@@ -62,7 +62,7 @@
             <plugin>
                 <groupId>org.panteleyev</groupId>
                 <artifactId>jpackage-maven-plugin</artifactId>
-                <version>1.3.0</version>
+                <version>1.5.1</version>
 
                 <!-- TODO: strip down installer size, use modules, find small alternative to OpenCV -->
 
@@ -103,7 +103,7 @@
                     <plugin>
                         <groupId>org.panteleyev</groupId>
                         <artifactId>jpackage-maven-plugin</artifactId>
-                        <version>1.3.0</version>
+                        <version>1.5.1</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -127,7 +127,7 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>opencv-windows-x64</artifactId>
+                    <artifactId>opencv-windows-amd64</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
@@ -146,7 +146,7 @@
                     <plugin>
                         <groupId>org.panteleyev</groupId>
                         <artifactId>jpackage-maven-plugin</artifactId>
-                        <version>1.3.0</version>
+                        <version>1.5.1</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -154,13 +154,16 @@
                                     <goal>jpackage</goal>
                                 </goals>
                                 <configuration>
-                                    <icon>media/icon.svg</icon>
+                                    <icon>src/main/resources/icons/icon-128.png</icon>
                                     <type>DEB</type>
                                     <linuxAppCategory>Science</linuxAppCategory>
                                     <linuxMenuGroup>Science</linuxMenuGroup>
-                                    <!--TODO: /opt is default <installDir></installDir>-->
-                                    <!--TODO: <linuxDebMaintainer></linuxDebMaintainer>-->
+                                    <installDir>/usr</installDir>
                                     <linuxShortcut>true</linuxShortcut>
+                                    <additionalOptions>
+                                        <option>--linux-package-deps</option>
+                                        <option>ttf-ancient-fonts</option>
+                                    </additionalOptions>
                                 </configuration>
                             </execution>
                         </executions>
@@ -171,7 +174,7 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>opencv-linux-x64</artifactId>
+                    <artifactId>opencv-linux-amd64</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>

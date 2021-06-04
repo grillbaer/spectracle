@@ -10,7 +10,7 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>opencv-linux-x64</artifactId>
+    <artifactId>opencv-linux-amd64</artifactId>
 
     <!-- The goal of this module is to create a size-reduced version of the
          opencv jar with all shared libraries for other OS platforms removed.
