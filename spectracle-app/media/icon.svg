@@ -9,6 +9,9 @@
    id="svg5"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
    sodipodi:docname="icon.svg"
+   inkscape:export-filename="C:\dev\git\spectracle\spectracle-app\src\main\resources\icons\icon-16.png"
+   inkscape:export-xdpi="4.7800002"
+   inkscape:export-ydpi="4.7800002"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -76,13 +79,13 @@
        inkscape:collect="always"
        xlink:href="#linearGradient3001"
        id="radialGradient3003"
-       cx="103.36427"
-       cy="111.80567"
-       fx="103.36427"
-       fy="111.80567"
-       r="45.824825"
-       gradientTransform="matrix(0.92744495,0,0,0.92744489,4.5680533,3.2855206)"
-       gradientUnits="userSpaceOnUse" />
+       cx="121.43585"
+       cy="64.867439"
+       fx="121.43585"
+       fy="64.867439"
+       r="42.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.97405723,0.80084572,-0.67631432,0.82259137,30.031931,-41.685033)" />
   </defs>
   <g
      inkscape:label="Ebene 1"
@@ -101,7 +104,8 @@
          cy="106.97912"
          r="42.5" />
       <g
-         id="g2796">
+         id="g2796"
+         transform="matrix(1.0351203,0,0,1.0720254,-3.8996458,-8.2850299)">
         <image
            width="117.83146"
            height="256.67062"
@@ -110,7 +114,8 @@
            id="image17"
            x="38.246681"
            y="-38.925228"
-           clip-path="url(#clipPath2605)" />
+           clip-path="url(#clipPath2605)"
+           style="mix-blend-mode:normal;fill:#ffffff;fill-opacity:0.653169" />
         <circle
            style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:7.6;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            id="path195-5"
