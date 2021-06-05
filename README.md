@@ -8,7 +8,7 @@ youtubers.
 
 ## Installation
 
-Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available as artifacts in the builds in [Actions](https://github.com/grillbaer/spectracle/actions). There are no tagged release versions yet. The installers already contain the required JRE. They install the application including the JRE in `Program Files\Spectracle` (Win) resp. `/opt/spectracle` (Linux) and add shortcuts to the start menu. They do not touch or require any system wide JRE installations.
+Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available as artifacts in the builds in [Actions](https://github.com/grillbaer/spectracle/actions). There are no tagged release versions yet. The installers already contain the required JRE. They install the application including the JRE in `Program Files\Spectracle` (Win) resp. `/usr/lib/spectracle` with executable `/usr/bin/Spectracle` (Linux) and add shortcuts to the start menu. They do not touch or require any system wide JRE installations.
 
 ## Examples
 
