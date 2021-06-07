@@ -7,7 +7,7 @@ import grillbaer.spectracle.Context;
 import grillbaer.spectracle.spectrum.SampleLine;
 import grillbaer.spectracle.spectrum.Spectrum;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
-import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration.Point;
 import grillbaer.spectracle.ui.components.Dialogs;
 import javafx.stage.FileChooser;
 import lombok.*;
@@ -83,8 +83,8 @@ public final class SpectrumDataFiles {
                 throw new IOException("File " + sourceFile + " must contain at least two data points");
 
             final var calibration = WaveLengthCalibration.create(
-                    new WaveLengthPoint(0., dataPoints.get(0).getWaveLength()),
-                    new WaveLengthPoint(1., dataPoints.get(dataPoints.size() - 1).getWaveLength()));
+                    List.of(new Point(0., dataPoints.get(0).getWaveLength()),
+                            new Point(1., dataPoints.get(dataPoints.size() - 1).getWaveLength())));
 
             final var raw = dataPoints.stream().mapToDouble(DataPoint::getIntensityRaw).toArray();
             final var processed = dataPoints.stream()

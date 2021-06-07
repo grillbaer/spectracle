@@ -8,9 +8,11 @@ import lombok.NonNull;
 import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static java.util.Comparator.comparing;
 
 /**
  * Calibration mapping between a range from 0.0 to 1.0 and spectral wavelengths.
@@ -21,32 +23,77 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 @JsonAutoDetect(fieldVisibility = NONE, getterVisibility = NONE, isGetterVisibility = NONE)
 public final class WaveLengthCalibration {
     @JsonProperty("waveLengthPoints")
-    private final List<WaveLengthPoint> waveLengthPoints = new ArrayList<>();
+    private final List<Point> points = new ArrayList<>(); // ascending by ratio
+    private final boolean nanoMetersAscending;
 
-    private WaveLengthCalibration(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
-        this(List.of(waveLengthPoint0, waveLengthPoint1));
+    private WaveLengthCalibration(@JsonProperty("waveLengthPoints") @NonNull Collection<Point> points) {
+        if (points.size() < 2)
+            throw new IllegalArgumentException("calibration requires at least two points, but "
+                    + points.size() + " were passed");
+
+        this.points.addAll(points);
+        this.points.sort(comparing(Point::getRatio));
+        if (!areRatioAndWaveLengthStrictlyMonotonic(this.points))
+            throw new IllegalArgumentException("calibration points must be distinct and bijective");
+
+        this.nanoMetersAscending = this.points.get(0).getNanoMeters() < this.points.get(1).getNanoMeters();
     }
 
-    private WaveLengthCalibration(@JsonProperty("waveLengthPoints") List<WaveLengthPoint> waveLengthPoints) {
-        this.waveLengthPoints.addAll(waveLengthPoints);
+    /**
+     * Whether all points have distinct wavelengths and ratios, and both wavelengths and ratios are strictly monotonic in one or the other direction.
+     *
+     * @param sortedPoints points sorted either by ratio or by wavelength
+     */
+    public static boolean areRatioAndWaveLengthStrictlyMonotonic(@NonNull List<Point> sortedPoints) {
+        boolean nanoMetersAscending = sortedPoints.get(0).getNanoMeters() < sortedPoints.get(1).getNanoMeters();
+        boolean ratioAscending = sortedPoints.get(0).getRatio() < sortedPoints.get(1).getRatio();
+        for (int i = 1; i < sortedPoints.size(); i++) {
+            final var prevPoint = sortedPoints.get(i - 1);
+            final var point = sortedPoints.get(i);
+            if ((nanoMetersAscending && prevPoint.getNanoMeters() >= point.getNanoMeters())
+                    || (!nanoMetersAscending && prevPoint.getNanoMeters() <= point.getNanoMeters())
+                    || (ratioAscending && prevPoint.getRatio() >= point.getRatio())
+                    || (!ratioAscending && prevPoint.getRatio() <= point.getRatio())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static WaveLengthCalibration createDefault() {
-        return new WaveLengthCalibration(
-                new WaveLengthPoint(0.15234, 393.),
-                new WaveLengthPoint(0.72656, 656.));
+        return new WaveLengthCalibration(List.of(
+                new Point(0.2, 400.),
+                new Point(0.8, 750.)));
     }
 
-    public static WaveLengthCalibration create(@NonNull WaveLengthPoint waveLengthPoint0, @NonNull WaveLengthPoint waveLengthPoint1) {
-        return new WaveLengthCalibration(waveLengthPoint0, waveLengthPoint1);
+
+    public static WaveLengthCalibration create(@NonNull Collection<Point> calPoints) {
+        return new WaveLengthCalibration(calPoints);
     }
 
-    public WaveLengthPoint getWaveLengthPoint0() {
-        return this.waveLengthPoints.get(0);
+    public Point getPoint(int pointIndex) {
+        return this.points.get(pointIndex);
     }
 
-    public WaveLengthPoint getWaveLengthPoint1() {
-        return this.waveLengthPoints.get(1);
+    public int getSize() {
+        return this.points.size();
+    }
+
+    public double ratioToNanoMeters(double ratio) {
+        final int pointIndex0 = findPointIndex0ForRatio(ratio);
+        final var point0 = getPoint(pointIndex0);
+        final var point1 = getPoint(pointIndex0 + 1);
+
+        return point0.getNanoMeters() + (ratio - point0.getRatio()) * getSlope(point0, point1);
+    }
+
+    public double nanoMetersToRatio(double nanoMeters) {
+        final int pointIndex0 = findPointIndex0ForNanoMeters(nanoMeters);
+        final var point0 = getPoint(pointIndex0);
+        final var point1 = getPoint(pointIndex0 + 1);
+
+        return point0.getRatio() + (nanoMeters - point0.getNanoMeters()) / getSlope(point0, point1);
     }
 
     public static double indexToRatio(int length, int index) {
@@ -58,34 +105,45 @@ public final class WaveLengthCalibration {
     }
 
     public double indexToNanoMeters(int length, int index) {
-        return getWaveLengthPoint0().getNanoMeters()
-                + getDeltaNanoMeters() * ((indexToRatio(length, index) - this.getWaveLengthPoint0()
-                .getRatio()) / getDeltaRatio());
+        return ratioToNanoMeters(indexToRatio(length, index));
     }
 
     public int nanoMetersToNextIndex(int length, double nanoMeters) {
         return ratioToNextIndex(length, nanoMetersToRatio(nanoMeters));
     }
 
-    public double nanoMetersToRatio(double nanoMeters) {
-        return getWaveLengthPoint0().getRatio()
-                + getDeltaRatio() * (nanoMeters - getWaveLengthPoint0().getNanoMeters()) / getDeltaNanoMeters();
+    private int findPointIndex0ForRatio(double ratio) {
+        int pointIndex0 = 0;
+        while (pointIndex0 < getSize() - 2 && getPoint(pointIndex0 + 1).getRatio() < ratio)
+            pointIndex0++;
+
+        return pointIndex0;
     }
 
-    private double getDeltaNanoMeters() {
-        return getWaveLengthPoint1().getNanoMeters() - getWaveLengthPoint0().getNanoMeters();
+    private double getSlope(Point point0, Point point1) {
+        return (point1.getNanoMeters() - point0.getNanoMeters())
+                / (point1.getRatio() - point0.getRatio());
     }
 
-    private double getDeltaRatio() {
-        return getWaveLengthPoint1().getRatio() - getWaveLengthPoint0().getRatio();
+    private int findPointIndex0ForNanoMeters(double nanoMeters) {
+        int pointIndex0 = 0;
+        if (this.nanoMetersAscending) {
+            while (pointIndex0 < getSize() - 2 && getPoint(pointIndex0 + 1).getNanoMeters() < nanoMeters)
+                pointIndex0++;
+        } else {
+            while (pointIndex0 < getSize() - 2 && getPoint(pointIndex0 + 1).getNanoMeters() > nanoMeters)
+                pointIndex0++;
+        }
+
+        return pointIndex0;
     }
 
     public double getBeginNanoMeters() {
-        return indexToNanoMeters(2, 0);
+        return ratioToNanoMeters(0.);
     }
 
     public double getEndNanoMeters() {
-        return indexToNanoMeters(2, 1);
+        return ratioToNanoMeters(1.);
     }
 
     public double getMinNanoMeters() {
@@ -97,13 +155,13 @@ public final class WaveLengthCalibration {
     }
 
     public double getNanoMeterRange() {
-        return Math.abs(getMaxNanoMeters() - getMinNanoMeters());
+        return Math.abs(getEndNanoMeters() - getBeginNanoMeters());
     }
 
     @EqualsAndHashCode
     @Getter
     @ToString
-    public static final class WaveLengthPoint {
+    public static final class Point {
         /**
          * Ratio between begin of sample line at 0.0 and end of sample line at 1.0.
          */
@@ -112,7 +170,9 @@ public final class WaveLengthCalibration {
         @JsonProperty("nanoMeters")
         private final double nanoMeters;
 
-        public WaveLengthPoint(@JsonProperty("ratio") double ratio, @JsonProperty("nanoMeters") double nanoMeters) {
+        public Point(@JsonProperty("ratio") double ratio, @JsonProperty("nanoMeters") double nanoMeters) {
+            if (ratio < 0. || ratio > 1.)
+                throw new IllegalArgumentException("ratio must be between 0.0 and 1.0 but is " + ratio);
             this.ratio = ratio;
             this.nanoMeters = nanoMeters;
         }

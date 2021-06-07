@@ -6,17 +6,14 @@ import grillbaer.spectracle.camera.Frame;
 import grillbaer.spectracle.model.Settings.SensitivityCalibration;
 import grillbaer.spectracle.spectrum.*;
 import grillbaer.spectracle.spectrum.Calculations.Extrema;
-import grillbaer.spectracle.spectrum.WaveLengthCalibration.WaveLengthPoint;
+import grillbaer.spectracle.spectrum.WaveLengthCalibration.Point;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
 import javax.swing.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -383,8 +380,8 @@ public final class Model {
                 final var corrFactors = sensCal.getCorrectionFactors();
                 final var wlCal =
                         WaveLengthCalibration.create(
-                                new WaveLengthPoint(0.0, sensCal.getBeginNanoMeters()),
-                                new WaveLengthPoint(1.0, sensCal.getEndNanoMeters()));
+                                List.of(new Point(0.0, sensCal.getBeginNanoMeters()),
+                                        new Point(1.0, sensCal.getEndNanoMeters())));
                 setSensitivityCalibration(cameraSettings.getId(),
                         Spectrum.create(SampleLine.create(corrFactors), wlCal));
             }

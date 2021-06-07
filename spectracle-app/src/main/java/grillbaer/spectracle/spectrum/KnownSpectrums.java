@@ -62,8 +62,8 @@ public class KnownSpectrums {
     public static Spectrum blackBodyRadiationSpectrum(int length, double temperatureKelvin, double beginNanoMeters, double endNanoMeters) {
         final var calibration =
                 WaveLengthCalibration.create(
-                        new WaveLengthCalibration.WaveLengthPoint(0.0, beginNanoMeters),
-                        new WaveLengthCalibration.WaveLengthPoint(1.0, endNanoMeters));
+                        List.of(new WaveLengthCalibration.Point(0.0, beginNanoMeters),
+                                new WaveLengthCalibration.Point(1.0, endNanoMeters)));
         final var values = new double[length];
         double maxValue = 0f;
         for (int i = 0; i < length; i++) {
