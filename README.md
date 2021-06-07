@@ -46,7 +46,7 @@ A leaf of sorrel:
 
 * Colored spectrum graph view
 * Camera image view
-* Two-point wavelength calibration
+* Wavelength calibration with 2, 3 or 4 reference points, linear interpolation
 * Sensitivity calibration by comparing a captured spectrum with a known reference spectrum of an incandescent lamp or a
   halogen lamp
 * Known wavelengths display:
