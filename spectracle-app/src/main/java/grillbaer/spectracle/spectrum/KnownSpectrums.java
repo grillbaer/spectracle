@@ -37,7 +37,6 @@ public class KnownSpectrums {
                     new NamedWaveLength("K Ca+", 393.366),
                     new NamedWaveLength("H Ca+", 396.847),
                     new NamedWaveLength("G Ca/Fe", 430.78),
-                    new NamedWaveLength("e Fe", 438.355),
                     new NamedWaveLength("F H", 486.134),
                     new NamedWaveLength("h H", 410.175),
                     new NamedWaveLength("b2 Mg", 517.270),
