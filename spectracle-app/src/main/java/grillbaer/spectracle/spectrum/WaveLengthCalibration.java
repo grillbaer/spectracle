@@ -96,16 +96,24 @@ public final class WaveLengthCalibration {
         return point0.getRatio() + (nanoMeters - point0.getNanoMeters()) / getSlope(point0, point1);
     }
 
-    public static double indexToRatio(int length, int index) {
-        return (double) index / (length - 1);
+    public static double indexToRatio(int length, double index) {
+        return index / (length - 1);
+    }
+
+    public static double ratioToIndex(int length, double ratio) {
+        return ratio * (length - 1);
     }
 
     public static int ratioToNextIndex(int length, double ratio) {
-        return (int) Math.round(ratio * (length - 1));
+        return (int) Math.round(ratioToIndex(length, ratio));
     }
 
-    public double indexToNanoMeters(int length, int index) {
+    public double indexToNanoMeters(int length, double index) {
         return ratioToNanoMeters(indexToRatio(length, index));
+    }
+
+    public double nanoMetersToIndex(int length, double nanoMeters) {
+        return ratioToIndex(length, nanoMetersToRatio(nanoMeters));
     }
 
     public int nanoMetersToNextIndex(int length, double nanoMeters) {

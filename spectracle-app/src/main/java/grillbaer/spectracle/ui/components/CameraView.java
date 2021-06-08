@@ -17,6 +17,7 @@ public class CameraView extends SpectralXView {
 
     public CameraView() {
         super(0);
+        setLinearXAxis(false); // we don't stretch the image, so wavelengths on x axis have to align
     }
 
     public void setFrame(Frame frame) {

@@ -23,6 +23,7 @@ public abstract class SpectralXView extends JComponent {
     protected WaveLengthCalibration waveLengthCalibration;
     protected Rectangle viewArea;
 
+    private boolean linearXAxis = true;
     protected int xAxisHeight;
     private final Map<String, Cursor> xCursorsById = new TreeMap<>();
 
@@ -58,6 +59,13 @@ public abstract class SpectralXView extends JComponent {
         if (!Objects.equals(this.waveLengthCalibration, waveLengthCalibration)) {
             this.waveLengthCalibration = waveLengthCalibration;
             revalidate();
+            repaint();
+        }
+    }
+
+    public void setLinearXAxis(boolean linearXAxis) {
+        if (this.linearXAxis != linearXAxis) {
+            this.linearXAxis = linearXAxis;
             repaint();
         }
     }
@@ -278,16 +286,25 @@ public abstract class SpectralXView extends JComponent {
     }
 
     protected double waveLengthToX(double nanoMeters) {
-        return viewArea.x + Math.abs(nanoMeters - waveLengthCalibration.getBeginNanoMeters()) / waveLengthCalibration.getNanoMeterRange() * viewArea.width;
+        if (this.linearXAxis) {
+            return viewArea.x + Math.abs(nanoMeters - waveLengthCalibration.getBeginNanoMeters()) / waveLengthCalibration
+                    .getNanoMeterRange() * viewArea.width;
+        } else {
+            return viewArea.x + this.waveLengthCalibration.nanoMetersToIndex(viewArea.width, nanoMeters);
+        }
     }
 
     protected double xToWaveLength(double x) {
-        if (waveLengthCalibration.getBeginNanoMeters() < waveLengthCalibration.getEndNanoMeters()) {
-            return waveLengthCalibration.getBeginNanoMeters() + (x - viewArea.x) / viewArea.width * waveLengthCalibration
-                    .getNanoMeterRange();
+        if (this.linearXAxis) {
+            if (waveLengthCalibration.getBeginNanoMeters() < waveLengthCalibration.getEndNanoMeters()) {
+                return waveLengthCalibration.getBeginNanoMeters() + (x - viewArea.x) / viewArea.width * waveLengthCalibration
+                        .getNanoMeterRange();
+            } else {
+                return waveLengthCalibration.getBeginNanoMeters() - (x - viewArea.x) / viewArea.width * waveLengthCalibration
+                        .getNanoMeterRange();
+            }
         } else {
-            return waveLengthCalibration.getBeginNanoMeters() - (x - viewArea.x) / viewArea.width * waveLengthCalibration
-                    .getNanoMeterRange();
+            return waveLengthCalibration.indexToNanoMeters(viewArea.width, x - viewArea.x);
         }
     }
 
