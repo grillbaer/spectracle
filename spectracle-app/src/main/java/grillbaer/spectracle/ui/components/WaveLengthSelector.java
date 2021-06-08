@@ -1,9 +1,9 @@
 package grillbaer.spectracle.ui.components;
 
 import grillbaer.spectracle.model.Observers;
+import grillbaer.spectracle.spectrum.Formatting;
 import grillbaer.spectracle.spectrum.KnownSpectrums;
 import grillbaer.spectracle.spectrum.NamedWaveLength;
-import grillbaer.spectracle.spectrum.Formatting;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 public class WaveLengthSelector {
     private final JPanel panel;
     private final JComboBox<NamedWaveLength> comboBox;
+    private final JLabel label;
     private static final Pattern WAVE_LENGTH_PATTERN = Pattern.compile("\\s*[0-9]+([.,][0-9]*)?\\s*");
 
     @Getter
@@ -39,12 +40,14 @@ public class WaveLengthSelector {
                 .addUndoableEditListener(es -> onChange());
 
         if (labelText != null) {
-            final var label = new JLabel(labelText);
+            label = new JLabel(labelText);
             if (labelColor != null) {
                 label.setForeground(labelColor);
             }
             label.setLabelFor(this.comboBox);
             this.panel.add(label);
+        } else {
+            label = null;
         }
 
         this.panel.add(comboBox);
@@ -61,6 +64,12 @@ public class WaveLengthSelector {
 
     public void addActionListener(ActionListener listener) {
         this.comboBox.addActionListener(listener);
+    }
+
+    public void setLabelColor(Color color) {
+        if (this.label != null) {
+            this.label.setForeground(color);
+        }
     }
 
     public void transferFocus() {

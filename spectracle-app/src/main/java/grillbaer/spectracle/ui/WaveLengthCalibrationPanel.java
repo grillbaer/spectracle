@@ -3,10 +3,8 @@ package grillbaer.spectracle.ui;
 import grillbaer.spectracle.Context;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration;
 import grillbaer.spectracle.spectrum.WaveLengthCalibration.Point;
-import grillbaer.spectracle.ui.components.Buttons;
 import grillbaer.spectracle.ui.components.Cursor;
-import grillbaer.spectracle.ui.components.SpectrumGraphView;
-import grillbaer.spectracle.ui.components.WaveLengthSelector;
+import grillbaer.spectracle.ui.components.*;
 import lombok.NonNull;
 import net.miginfocom.swing.MigLayout;
 
@@ -16,16 +14,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class WaveLengthCalibrationPanel {
-    private static final List<Color> CAL_COLORS = List.of(
-            new Color(255, 100, 255),
-            new Color(90, 220, 90),
-            new Color(230, 150, 60),
-            new Color(70, 150, 240)
-    );
+import static grillbaer.spectracle.spectrum.Formatting.colorForWaveLength;
 
+public class WaveLengthCalibrationPanel {
     private static final int MIN_CALIBRATION_POINTS = 2;
-    private static final int MAX_CALIBRATION_POINTS = CAL_COLORS.size();
+    private static final int MAX_CALIBRATION_POINTS = 5;
 
     private final Context context;
 
@@ -57,9 +50,6 @@ public class WaveLengthCalibrationPanel {
         this.addCalibrationPointButton.addActionListener(e -> addCalibrationPoint());
         this.removeCalibrationPointButton = new JButton("Remove Point");
         this.removeCalibrationPointButton.addActionListener(e -> removeCalibrationPoint());
-        this.waveLengthSelectorPanel = new JPanel(new MigLayout());
-        addCalibrationPoint();
-        addCalibrationPoint();
 
         this.okButton = Buttons.createOkButton();
         this.okButton.setToolTipText("Set new calibration!");
@@ -69,6 +59,10 @@ public class WaveLengthCalibrationPanel {
         this.cancelButton.setToolTipText("Abort calibration");
         this.cancelButton.addActionListener(e -> abortCalibration());
 
+        this.waveLengthSelectorPanel = new JPanel(new MigLayout());
+        addCalibrationPoint();
+        addCalibrationPoint();
+
         this.panel = new JPanel(new FlowLayout());
         this.panel.add(this.calibrateButton);
         this.panel.add(waveLengthSelectorPanel);
@@ -76,7 +70,6 @@ public class WaveLengthCalibrationPanel {
         this.panel.add(this.cancelButton);
 
         updateForCalibration();
-        waveLengthSelectionChanged();
     }
 
     public JComponent getComponent() {
@@ -88,7 +81,6 @@ public class WaveLengthCalibrationPanel {
 
         final var index = this.waveLengthSelectors.size();
         final var label = "λ" + (char) ('₁' + index);
-        final var color = CAL_COLORS.get(index);
         final var newNanoMeters = switch (index) {
             case 0 -> WaveLengthCalibration.createDefault().getPoint(0).getNanoMeters();
             case 1 -> WaveLengthCalibration.createDefault().getPoint(1).getNanoMeters();
@@ -96,15 +88,15 @@ public class WaveLengthCalibrationPanel {
                     .getEndNanoMeters()) / 2.;
         };
 
-        final var selector = new WaveLengthSelector(label, color);
+        final var selector = new WaveLengthSelector(label, null);
         selector.setWaveLength(newNanoMeters);
-        selector.getChangeObservers().add(wl -> waveLengthSelectionChanged());
+        selector.getChangeObservers().add(wl -> waveLengthSelectionChanged(index));
         selector.addActionListener(e -> selector.transferFocus());
         this.waveLengthSelectorPanel.add(selector.getComponent(), "span 2, wrap 0");
         this.waveLengthSelectors.add(selector);
 
         final var cursor = new Cursor("Cal" + index, 400. + index * 100.,
-                () -> getCursorLabel(selector, label), color, color);
+                () -> getCursorLabel(selector, label), new Color(255, 100, 255), Color.WHITE);
         cursor.setDraggable(true);
         cursor.setValue(newNanoMeters);
         this.cursors.add(cursor);
@@ -112,6 +104,7 @@ public class WaveLengthCalibrationPanel {
 
         addNumberOfCalibrationPointsButtons();
         this.waveLengthSelectorPanel.revalidate();
+        waveLengthSelectionChanged(index);
     }
 
     private void removeCalibrationPoint() {
@@ -158,7 +151,15 @@ public class WaveLengthCalibrationPanel {
         return waveLength != null ? baseLabel + " = " + waveLength.getWaveLengthNameString(true) + " here" : baseLabel;
     }
 
-    private void waveLengthSelectionChanged() {
+    private void waveLengthSelectionChanged(int index) {
+        final var selector = this.waveLengthSelectors.get(index);
+        final var waveLength = selector.getValidWaveLength();
+        final var color = waveLength != null
+                ? RenderUtils.whitenColor(colorForWaveLength(waveLength.getNanoMeters()), 0.6)
+                : null;
+        selector.setLabelColor(color);
+        this.cursors.get(index).setLabelColor(color != null ? color : Color.LIGHT_GRAY);
+
         this.okButton.setEnabled(isValid());
         updateCursors();
     }
@@ -202,6 +203,9 @@ public class WaveLengthCalibrationPanel {
     }
 
     private List<Point> getValidWaveLengthPoints() {
+        if (getNumberOfCalibrationPoints() < 2)
+            return null; // NOSONAR want this for invalid
+
         final var oldCal = this.context.getModel().getWaveLengthCalibration();
         final var calPoints = new ArrayList<Point>();
         for (int i = 0; i < getNumberOfCalibrationPoints(); i++) {
