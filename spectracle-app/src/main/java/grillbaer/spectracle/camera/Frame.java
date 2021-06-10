@@ -13,17 +13,25 @@ import java.awt.image.DataBufferByte;
  */
 @Getter
 public final class Frame {
-    private final Mat mat = new Mat();
+    private VideoCapture source;
+    private Mat mat;
     private BufferedImage image;
 
 
     public void grabFrom(@NonNull VideoCapture videoCapture) {
+        if (this.source != videoCapture) {
+            // always use fresh mat for new source to avoid any concurrency issues
+            this.source = videoCapture;
+            this.mat = new Mat();
+            this.image = null;
+        }
+
         videoCapture.read(this.mat);
         updateImage();
     }
 
     private void updateImage() {
-        if (mat.rows() == 0 || mat.cols() == 0) {
+        if (mat == null || mat.rows() == 0 || mat.cols() == 0) {
             this.image = null;
             return;
         }
