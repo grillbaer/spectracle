@@ -23,7 +23,6 @@ public class ColorTemperatureSelector {
         this.panel = new JPanel(new FlowLayout());
 
         this.comboBox = new JComboBox<>(new String[]{"2700 K Incandescent Lamp", "3000 K Halogen Lamp"});
-        this.comboBox.setEditable(true);
         this.comboBox.addActionListener(e -> onChange());
         this.comboBox.addFocusListener(new FocusAdapter() {
             @Override
