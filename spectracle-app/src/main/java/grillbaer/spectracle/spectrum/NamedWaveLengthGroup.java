@@ -1,15 +1,19 @@
 package grillbaer.spectracle.spectrum;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.List;
 
-@AllArgsConstructor
 @Getter
 public class NamedWaveLengthGroup {
-    private final String groupName;
-    private final List<NamedWaveLength> waveLengthList;
+    private final @NonNull String groupName;
+    private final @NonNull List<NamedWaveLength> waveLengthList;
+
+    public NamedWaveLengthGroup(@NonNull String groupName, @NonNull List<NamedWaveLength> waveLengthList) {
+        this.groupName = groupName;
+        this.waveLengthList = waveLengthList.stream().map(nwl -> nwl.withGroup(this)).toList();
+    }
 
     @Override
     public String toString() {

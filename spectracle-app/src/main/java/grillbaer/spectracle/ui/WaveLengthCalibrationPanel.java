@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static grillbaer.spectracle.spectrum.Formatting.colorForWaveLength;
+import static grillbaer.spectracle.spectrum.NamedWaveLength.Component.*;
 
 public class WaveLengthCalibrationPanel {
     private static final int MIN_CALIBRATION_POINTS = 2;
@@ -148,7 +149,7 @@ public class WaveLengthCalibrationPanel {
         final var baseLabel = "<html>Calibration<br>Set " + waveLengthLabel;
 
         final var waveLength = waveLengthSelector.getValidWaveLength();
-        return waveLength != null ? baseLabel + " = " + waveLength.getWaveLengthNameString(true) + " here" : baseLabel;
+        return waveLength != null ? baseLabel + " = " + waveLength.format(WAVELENGTH, GROUP, NAME) + " here" : baseLabel;
     }
 
     private void waveLengthSelectionChanged(int index) {
