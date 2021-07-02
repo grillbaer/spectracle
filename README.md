@@ -42,6 +42,14 @@ A leaf of sorrel:
 
 ![Daylight Through Green Plant Leaf](samples/daylight_through_green_leaf.png)
 
+### Flash in Thunderstorm
+
+A flash captured in a nightly thunderstorm using peak hold. Spectrum is quite noisy
+because camera needed a high exposure setting.
+Clearly shows peaks from nitrogen and oxygen (air) and also hydrogen (rain):
+
+![Flash in a Thunderstorm](samples/thunderstorm-flash.png)
+
 ## Current Features
 
 * Colored spectrum graph view
