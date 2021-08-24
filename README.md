@@ -10,12 +10,41 @@ Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available
 
 ## Basic Usage
 
+The window shows the middle stripe of the camera picture at the bottom and the spectral intensity graph sampled from it at the top. Both are scaled to full width:
+
 ![Basic functions](doc/basic-functions.png)
 
-TODO: document
- * basic functions
- * wavelength calibration
- * intensity calibration
+### Wavelength Calibration
+
+Before getting correct wavelength readings, you must calibrate your spectroscope and camera setup with the aid of a known light source.
+You can either use the known spectral lines of a simple fluorescent lamp/tube, the dark Fraunhofer lines of natural daylight (if your setup has good resolution) or any other known wavelengths in light sources.
+
+Simply enter wavelength calibration mode, select the known wavelengths in ascending or descending order in the text fields / dropdown boxes and drag the cursors in the spectrum graph to the corresponding peaks or dents. Either apply or abort the calibration.
+
+There must be at least 2 calibration points, but you can use more to get better precision for the usually not exactly linear spectroscopes. Well distributed calibration points with enough distance will yield better results.
+
+My simple hardware setup at the bottom of this page is able to get to below 1 or 2 nm precision in most ranges.
+
+![Wavelength Calibration](doc/wavelength-calibration.png)
+
+### Sensitivity Calibration
+
+The sensitivity of most cameras highly depends on wavelength. This is especially true for the cheap RGB cams with their color filters. Monochrome would be better. The spectrum therefore cannot be used to compare intensities over a larger wavelength range unless it is calibrated.
+
+For a rough calibration you can use the glow emission spectrum of a halogen or incandescent lamp. Spectracle can calculate a sensitivity correction curve by comparing the measured spectrum to the theoretical spectrum of a black body with a matching temperature.
+
+A white diffuser between the light bulb's glow wire and spectroscope, the peak hold and the stop function may help to get a good capture of the full spectrum with a low noise level. (Some additional smoothing to the spectrum will be applied by Spectracle internally, anyway.)
+Watch out not to have any overexposure in the spectrum!
+
+Yet uncalibrated:
+
+![Wavelength Calibration](doc/sensitivity-calibration-1.png)
+
+Already calibrated, shows the current sensitivity correction curve:
+
+![Wavelength Calibration](doc/sensitivity-calibration-2.png)
+
+Only the range from 380 to 750 nm will be considered for calibration because many cams are very insensitive in UV and IR which would cause a lot of noise in the visible range of the spectrum as a result.
 
 ## Examples
 
