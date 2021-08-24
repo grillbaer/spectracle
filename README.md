@@ -1,7 +1,5 @@
 # ![Icon](spectracle-app/src/main/resources/icons/icon-48.png) Spectracle – a Spectrometer UI for Computer Attached Cameras
 
-### WORK IN PROGRESS!
-
 Yet another spectroscope UI. This app samples the spectrum from the video stream of a computer attached camera with an
 attached spectroscope. It has been inspired by the great work from Youtube channel Les' Lab and some other great
 youtubers.
@@ -32,6 +30,12 @@ Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available
 
 ![Retro LED Lamp](samples/retro_led_good_calibration.png)
 
+### Black Light Pocket Lamp
+
+LED-based black light pocket lamp with 395 nm according to manufacturer. Also has an intense IR peak at 770 nm:
+
+![Black Light Pocket Lamp](samples/black-light-led-pocket-lamp.png)
+
 ### Pinkish Plant LED Panel
 
 ![Pinkish Plant LED Panel](samples/plant_light_good_calibration.png)
@@ -54,7 +58,7 @@ Clearly shows peaks from nitrogen and oxygen (air) and also hydrogen (rain):
 
 * Colored spectrum graph view
 * Camera image view
-* Wavelength calibration with at least 2 and up to 5 reference points, linear interpolation
+* Wavelength calibration with at least 2 and up to 5 known reference points, linear interpolation
 * Sensitivity calibration by comparing a captured spectrum with a known reference spectrum of an incandescent lamp or a
   halogen lamp
 * Known wavelengths display:
