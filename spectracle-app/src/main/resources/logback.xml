@@ -3,6 +3,8 @@
     <property name="LOG_DIR" value="${java.io.tmpdir}/spectracle"/>
     <property name="PATTERN" value="%date{ISO8601,UTC}  %-5level [%-20thread] %-36logger{35} - %msg%n"/>
 
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/spectracle.log</file>
 
@@ -26,7 +28,17 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="com.sun.jna" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="nu.pattern" level="TRACE" additivity="false">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="INFO">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>

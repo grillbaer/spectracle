@@ -6,6 +6,7 @@ import grillbaer.spectracle.ui.MainPanel;
 import nu.pattern.OpenCV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,6 +14,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,13 +25,7 @@ public class Main {
     private final static Logger LOG = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
-        LOG.info("Spectracle starting up ...");
-        LOG.info("OS Name: {}", System.getProperty("os.name"));
-        LOG.info("OS Arch: {}", System.getProperty("os.arch"));
-        LOG.info("OS Version: {}", System.getProperty("os.version"));
-        LOG.info("Java Version: {}", System.getProperty("java.version"));
-
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> LOG.error("Uncaught exception from thread {}", t.getName(), e));
+        initLogging();
 
         LOG.info("Initializing OpenCV ...");
         OpenCV.loadLocally();
@@ -53,6 +49,21 @@ public class Main {
             LOG.info("Setting main window visible");
             frame.setVisible(true);
         });
+    }
+
+    private static void initLogging() {
+        LOG.info("================================================================================");
+        LOG.info("Spectracle starting up ...");
+
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> LOG.error("Uncaught exception from thread {}", t.getName(), e));
+
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install(); // bridge JUL logging to SLF4j
+
+        LOG.info("OS Name: {}", System.getProperty("os.name"));
+        LOG.info("OS Arch: {}", System.getProperty("os.arch"));
+        LOG.info("OS Version: {}", System.getProperty("os.version"));
+        LOG.info("Java Version: {}", System.getProperty("java.version"));
     }
 
     private static List<? extends Image> getWindowIcons() {
