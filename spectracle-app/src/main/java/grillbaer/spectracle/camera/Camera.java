@@ -41,6 +41,7 @@ public final class Camera implements Closeable {
     }
 
     public Camera(int id) {
+        LOG.info("Camera id={}: opening ...", id);
         this.id = id;
         this.videoCapture = new VideoCapture(id);
 
@@ -126,5 +127,10 @@ public final class Camera implements Closeable {
     private String formatPropValue(int propId, double value) {
         return String.format(Locale.ROOT, "%-40s %5d = %6.1f",
                 PROP_NAMES_BY_ID.get(propId), propId, value);
+    }
+
+    @Override
+    public String toString() {
+        return "Camera[" + "id=" + this.id + ", cameraProps=" + this.cameraProps + "]";
     }
 }

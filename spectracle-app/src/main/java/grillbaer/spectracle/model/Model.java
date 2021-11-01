@@ -10,6 +10,8 @@ import grillbaer.spectracle.spectrum.WaveLengthCalibration.Point;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.*;
@@ -22,6 +24,8 @@ import java.util.concurrent.CompletableFuture;
  */
 @Getter
 public final class Model {
+    private final static Logger LOG = LoggerFactory.getLogger(Model.class);
+
     private Camera camera;
     private final Observers<Camera> cameraObservers = new Observers<>();
 
@@ -94,6 +98,7 @@ public final class Model {
      */
     public void setCamera(Camera camera) {
         if (this.camera != camera) {
+            LOG.info("Setting camera {}", camera);
             this.camera = camera;
             final var cameraProps = getCameraProps();
             if (cameraProps != null) {
