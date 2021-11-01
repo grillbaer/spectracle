@@ -6,7 +6,11 @@ youtubers.
 
 ## Installation
 
-Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available as artifacts in the workflow builds in [Actions](https://github.com/grillbaer/spectracle/actions). There are no tagged release versions yet. The installers already contain the required JRE. They install the application including the JRE in `Program Files\Spectracle` (Win) resp. `/usr/lib/spectracle` with executable `/usr/bin/Spectracle` (Linux) and add shortcuts to the start menu. They do not touch or require any system wide JRE installations.
+Pre-built installers for Windows amd64 (MSI) and Linux amd64 (DEB) are available for logged in github users as artifacts in the workflow builds in [Actions](https://github.com/grillbaer/spectracle/actions). There are no tagged release versions yet. The installers already contain the required JRE. They install the application including the JRE in `Program Files\Spectracle` (Win) resp. `/usr/lib/spectracle` with executable `/usr/bin/Spectracle` (Linux) and add shortcuts to the start menu. They do not touch or require any system wide JRE installations.
+
+#### Known Bugs
+
+Windows/OBS Studio: Users have experienced crashes of the application or the main window not showing up at all if OBS Studio was installed and there was no real camera connected. There seems to be some incompatibility between the OpenCV lib used for video capturing in this application and a virtual video capture device provided by OBS Studio. The current workaround is to attach a real camera when starting the application.
 
 ## Basic Usage
 
