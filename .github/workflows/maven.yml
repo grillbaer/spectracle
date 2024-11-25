@@ -35,7 +35,7 @@ jobs:
     - name: Maven Build
       run: mvn -B clean package --file pom.xml
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Binary-${{ runner.os }}
         path: spectracle-app/target/dist/*
