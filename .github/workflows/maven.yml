@@ -20,20 +20,24 @@ jobs:
         
     steps:
     - uses: actions/checkout@v2
+    
     - name: Set up JDK
       uses: actions/setup-java@v2
       with:
         java-version: '17'
         distribution: 'adopt'
         architecture: x64
+    
     - name: Cache Maven Artifacts
       uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
+    
     - name: Maven Build
       run: mvn -B clean package --file pom.xml
+    
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
