@@ -5,7 +5,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
+  workflow_dispatch:
+  schedule:
+    - cron: '20 4 15 JAN-DEC *'
+    
 jobs:
   build:
 
